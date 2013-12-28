@@ -25,13 +25,14 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	public NativeSurfaceView( Context context ) 
 	{
 		super(context);
-		Init();
+		
+		Init( context );
 	}
 	
 	public NativeSurfaceView( Context context, AttributeSet attrs ) 
 	{
         super(context, attrs);
-        Init();
+        Init( context );
     }
 	
 	@Override
@@ -54,14 +55,19 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	/////////////////////////////////////////////////////////
 	//                   Initialization                    //
 	/////////////////////////////////////////////////////////
-	private void Init()
+	private void Init( Context context )
 	{
 		// Install a SurfaceHolder.Callback so we get notified when the
 		// underlying surface is created and destroyed
 		SurfaceHolder holder = getHolder();
 		holder.addCallback( this );
 	
-		mNativeThread = new NativeThread( mThisWeakRef );
+		// Retrieve application's name
+		int stringId = context.getApplicationInfo().labelRes;
+	    String strAppName = context.getString(stringId);
+	    
+	    // Start the NativeThread
+		mNativeThread = new NativeThread( strAppName, mThisWeakRef );
 		mNativeThread.start();
 	}
 
@@ -226,6 +232,8 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	@SuppressLint("MissingSuperCall")
 	public static class NativeThread extends Thread
 	{
+		String mApplicationName;
+		
 		private boolean mExited = false;
 		
 		private ArrayList<Runnable> mEventQueue = new ArrayList<Runnable>();
@@ -295,9 +303,11 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			}						
 		}
 		
-		NativeThread( WeakReference<NativeSurfaceView> pNativeSurfaceView )
+		NativeThread( String applicationName, WeakReference<NativeSurfaceView> pNativeSurfaceView )
 		{
 			super();
+			
+			mApplicationName = applicationName;
 			
 			mNativeSurfaceViewWeakRef = pNativeSurfaceView;
 		}
@@ -311,8 +321,8 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			// Run native main loop
 			NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
 			if ( pNativeSurfaceView != null )
-			{
-				pNativeSurfaceView.nativeMain();
+			{				
+				pNativeSurfaceView.nativeMain( mApplicationName );
 			}
 			
 			// Exit
@@ -557,7 +567,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	}
 	
 	// Native methods
-	public native void nativeMain();
+	public native void nativeMain( String strApplicationName );
 	
 	
 	// Load native library

@@ -1,15 +1,16 @@
 #include "AndroidLog.h"
 #include <dlfcn.h>
 #include <unistd.h>
+#include <stdio.h>
 
 extern "C"
 {
-    JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj );
+    JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplicationName );
 };
 
 static const JNINativeMethod g_NativeMethods[] =
 {
-    { "nativeMain", "()V", (void*)nativeMain },
+    { "nativeMain", "(Ljava/lang/String;)V", (void*)nativeMain },
 };
 
 #define NELEM( x ) ( (int) ( sizeof(x) / sizeof( (x) [0] ) ) )
@@ -31,8 +32,16 @@ jint JNI_OnLoad( JavaVM* pJavaVM, void* pReserved )
     return JNI_VERSION_1_6;
 }
 
-JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj )
+JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplicationName )
 {
+	// Application Name
+	const char* pApplicationName = pEnv->GetStringUTFChars( strApplicationName, NULL );
+	char strLibName[ 128 ];
+	sprintf( strLibName, "lib%s.so", pApplicationName );
+	LOGV( "[Native]: Loading dynamic library: %s.", strLibName );
+
+	pEnv->ReleaseStringUTFChars( strApplicationName, pApplicationName );
+
 	// Error message
 	const char* pErrorString = NULL;
 
@@ -41,7 +50,7 @@ JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj )
 	void (*init_native_activity)( JNIEnv*, jobject );
 
 	// Load library
-	void* pLibraryHandle = dlopen( "libNativeExample.so", RTLD_NOW | RTLD_GLOBAL );
+	void* pLibraryHandle = dlopen( strLibName, RTLD_NOW | RTLD_GLOBAL );
 	if ( !pLibraryHandle )
 	{
 		LOGE( "Could not load library" );
