@@ -9,7 +9,8 @@
         android:targetSdkVersion="19" />
 
     <application>
-        <activity android:name="com.lunarsong.android.NativeActivity" />
+        <activity android:name="com.lunarsong.android.NativeActivity" 
+            android:configChanges="keyboardHidden|keyboard|orientation|screenSize" />
     </application>
 
 </manifest>

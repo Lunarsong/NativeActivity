@@ -7,9 +7,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.inputmethod.InputMethodManager;
 
 public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 {
@@ -24,14 +27,14 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	/////////////////////////////////////////////////////////
 	public NativeSurfaceView( Context context ) 
 	{
-		super(context);
+		super( context );
 		
 		Init( context );
 	}
 	
 	public NativeSurfaceView( Context context, AttributeSet attrs ) 
 	{
-        super(context, attrs);
+        super( context, attrs );
         Init( context );
     }
 	
@@ -76,9 +79,30 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	//            SurfaceHolder Implementations            //
 	/////////////////////////////////////////////////////////
 	@Override
-	public void surfaceChanged( SurfaceHolder holder, int arg1, int arg2, int arg3 ) 
+	public void surfaceChanged( SurfaceHolder holder, int iFormat, int iWidth, int iHeight ) 
 	{
-		mNativeThread.queueEvent( new NativeMessage( NativeMessage.NativeEventType.SurfaceResized ) );		
+		class SurfaceChangedMessage implements Runnable
+	    {
+	        private int mFormat;
+	        private int mWidth;
+	        private int mHeight;
+	        private NativeThread mNativeThread;
+	        public SurfaceChangedMessage( NativeThread nativeThread, int iFormat, int iWidth, int iHeight )
+	        { 
+	        	mNativeThread = nativeThread;
+	        	mFormat = iFormat;
+	        	mWidth = iWidth;
+	        	mHeight = iHeight;
+	        }
+	 
+	        @Override
+	        public void run() 
+	        {
+	        	mNativeThread.onSurfaceChanged( mFormat, mWidth, mHeight );               
+	        }	        
+	    }
+		
+		queueEvent( new SurfaceChangedMessage( mNativeThread, iFormat, iWidth, iHeight ) );		
 	}
 
 	@Override
@@ -215,6 +239,68 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		queueEvent( new WindowFocusMessage( mNativeThread, hasWindowFocus ) );
     }
     
+    @Override
+    public boolean onTouchEvent( MotionEvent event ) 
+    {
+        // Implement Runnable for MotionEvent parameter
+        class MotionEventRunnable implements Runnable
+        {
+            private MotionEvent mEvent;
+            private NativeThread mNativeThread;
+            public MotionEventRunnable( NativeThread nativeThread, MotionEvent event ) { mNativeThread = nativeThread; mEvent = event; }
+     
+            @Override
+            public void run() 
+            {
+                // Get the number of pointers to iterate
+                int iNumPointers = mEvent.getPointerCount();
+                for ( int i = 0; i < iNumPointers; ++i )
+                {
+                    // Get the pointer ID and index
+                    int iPointerID = mEvent.getPointerId( i );
+                    int iPointerIndex = mEvent.findPointerIndex( iPointerID );
+     
+                    // Get the xy position and action
+                    float x = mEvent.getX( iPointerIndex );
+                    float y = mEvent.getY( iPointerIndex );
+     
+                    int iAction = mEvent.getActionMasked();
+     
+                    // Send to C++
+                    mNativeThread.onTouch( iPointerID, x, y, iAction );
+                }               
+            }
+        }
+     
+        // Send the event to the renderer thread
+        queueEvent( new MotionEventRunnable( mNativeThread, event ) );
+     
+        return true;
+    }
+    
+    @Override
+    public boolean onKeyUp( int iKeyCode, KeyEvent event ) 
+    {
+        class KeyEventMessage implements Runnable
+        {
+            private KeyEvent mEvent;
+            private int mKeyCode;
+            private NativeThread mNativeThread;
+            public KeyEventMessage( NativeThread nativeThread, int iKeyCode, KeyEvent event ) { mNativeThread = nativeThread; mKeyCode = iKeyCode; mEvent = event; }
+     
+            @Override
+            public void run() 
+            {
+            	mNativeThread.onKeyUp( mKeyCode, mEvent );
+            }
+        }
+     
+        // Send the event to the renderer thread
+        queueEvent( new KeyEventMessage( mNativeThread, iKeyCode, event ) );
+    	
+    	return true;
+    }
+    
     /**
      * Queue a runnable to be run on the GL rendering thread. This can be used
      * to communicate with the Renderer on the rendering thread.
@@ -257,7 +343,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			
 			return false;
 		}
-		
+
 		public void onSurfaceDestroyed() 
 		{			
 			mHasSurface = false;
@@ -274,6 +360,15 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			
 			mHasSurface = true;
 			handleVisibility();			
+		}
+		
+		public void onSurfaceChanged( int iFormat, int iWidth, int iHeight ) 
+		{
+			NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+			if ( pNativeSurfaceView != null )
+			{				
+				pNativeSurfaceView.nativeOnSurfaceChanged( iFormat, iWidth, iHeight );
+			}
 		}
 
 		private void handleVisibility()
@@ -420,6 +515,27 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	            }
 	        }
 	    }
+
+		/////////////////////////////////////////////////////////
+		//                        Input                       //
+		/////////////////////////////////////////////////////////
+		public void onTouch( int iIndex, float fPosX, float fPosY, int iAction )
+		{
+			NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+			if ( pNativeSurfaceView != null )
+			{				
+				pNativeSurfaceView.nativeOnTouch( iIndex, fPosX, fPosY, iAction );
+			}
+		}
+		
+		public void onKeyUp( int iKeyCode, KeyEvent event ) 
+		{
+			NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+			if ( pNativeSurfaceView != null )
+			{				
+				pNativeSurfaceView.nativeOnKeyUp( iKeyCode, event.getUnicodeChar() );
+			}			
+		}
 		
 		/////////////////////////////////////////////////////////
 		//                        Events                       //
@@ -545,18 +661,6 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	NativeMessage peekMessage()
 	{
 		NativeMessage message = mNativeThread.peekMessage();
-		if ( mLogEnabled )
-		{
-			if ( message != null )
-			{
-				Log.v( "NativeActivity", "[Native] peekMessage: Returning message type: " + message.mType.toString() + ", ID: " + message.mID + "." );
-			}
-			
-			else
-			{
-				//Log.v( "NativeActivity", "[Native] peekMessage: No message." );
-			}
-		}
 		
 		return message;
 	}
@@ -566,9 +670,40 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		mNativeThread.handleEvents();
 	}
 	
-	// Native methods
+	void showKeyboard()
+	{
+		if ( mLogEnabled )
+		{
+			Log.d( "NativeActivity", "[Native]: Show keyboard." );
+		}
+		
+		if ( requestFocus() ) 
+    	{
+            InputMethodManager imm = (InputMethodManager)getContext().getSystemService( Context.INPUT_METHOD_SERVICE );
+            imm.showSoftInput( this, InputMethodManager.SHOW_IMPLICIT );
+        }
+	}
+	
+	void hideKeyboard()
+	{
+		if ( mLogEnabled )
+		{
+			Log.d( "NativeActivity", "[Native]: Hide keyboard." );
+		}
+		
+		InputMethodManager imm = (InputMethodManager)getContext().getSystemService( Context.INPUT_METHOD_SERVICE );
+        imm.hideSoftInputFromWindow( getWindowToken(), 0 );
+	}
+	
+	/* Native methods */
 	public native void nativeMain( String strApplicationName );
 	
+	// Surface
+	public native void nativeOnSurfaceChanged( int iFormat, int iWidth, int iHeight );
+	
+	// Input
+	public native void nativeOnTouch( int iIndex, float fPosX, float fPosY, int iAction );
+	public native void nativeOnKeyUp( int iKeyCode, int iUnicodeChar );
 	
 	// Load native library
 	static

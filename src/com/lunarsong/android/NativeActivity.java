@@ -14,7 +14,10 @@ public class NativeActivity extends Activity
         
         // Create the native surface view
         mNativeSurfaceView = new NativeSurfaceView( getApplication() );
-        setContentView( mNativeSurfaceView );        
+        mNativeSurfaceView.setFocusable(true);
+        mNativeSurfaceView.setFocusableInTouchMode(true);
+        
+        setContentView( mNativeSurfaceView );
     }
     
     @Override protected void onPause()

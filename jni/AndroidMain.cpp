@@ -1,16 +1,25 @@
-#include "AndroidLog.h"
 #include <dlfcn.h>
 #include <unistd.h>
 #include <stdio.h>
 
+#include "AndroidLog.h"
+#include "INativeInterface.h"
+
 extern "C"
 {
     JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplicationName );
+    JNIEXPORT void JNICALL nativeOnTouch( JNIEnv* env, jobject obj, int iPointerID, float fPosX, float fPosY, int iAction );
+    JNIEXPORT void JNICALL nativeOnKeyUp( JNIEnv* env, jobject obj, int iKeyCode, int iUnicodeChar );
+    JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* env, jobject obj, int iFormat, int iWidth, int iHeight );
+
 };
 
 static const JNINativeMethod g_NativeMethods[] =
 {
     { "nativeMain", "(Ljava/lang/String;)V", (void*)nativeMain },
+    { "nativeOnTouch", "(IFFI)V", (void*)nativeOnTouch },
+    { "nativeOnKeyUp", "(II)V", (void*)nativeOnKeyUp },
+    { "nativeOnSurfaceChanged", "(III)V", (void*)nativeOnSurfaceChanged },
 };
 
 #define NELEM( x ) ( (int) ( sizeof(x) / sizeof( (x) [0] ) ) )
@@ -32,6 +41,7 @@ jint JNI_OnLoad( JavaVM* pJavaVM, void* pReserved )
     return JNI_VERSION_1_6;
 }
 
+INativeInterface* s_pNativeInterface = NULL;
 JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplicationName )
 {
 	// Application Name
@@ -47,7 +57,7 @@ JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplic
 
 	// Library functions
 	void (*android_main)(void);
-	void (*init_native_activity)( JNIEnv*, jobject );
+	void (*init_native_activity)( JNIEnv*, jobject, INativeInterface** );
 
 	// Load library
 	void* pLibraryHandle = dlopen( strLibName, RTLD_NOW | RTLD_GLOBAL );
@@ -79,10 +89,41 @@ JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplic
 	}
 
 	// Init native activity
-	init_native_activity( pEnv, pObj );
+	init_native_activity( pEnv, pObj, &s_pNativeInterface );
 
 	// Call user defined main
 	(*android_main)();
 
+	// Release the nativve interface
+	delete s_pNativeInterface;
+	s_pNativeInterface = NULL;
+
 	dlclose( pLibraryHandle );
+}
+
+/**********************************************************************************/
+/*                                     OnTouch                                    */
+/**********************************************************************************/
+JNIEXPORT void JNICALL nativeOnTouch( JNIEnv* env, jobject obj, int iPointerID, float fPosX, float fPosY, int iAction )
+{
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnTouch( iPointerID, fPosX, fPosY, iAction );
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnKeyUp( JNIEnv* env, jobject obj, int iKeyCode, int iUnicodeChar )
+{
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnKeyUp( iKeyCode, iUnicodeChar );
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* env, jobject obj, int iFormat, int iWidth, int iHeight )
+{
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnSurfaceChanged( iFormat, iWidth, iHeight );
+	}
 }

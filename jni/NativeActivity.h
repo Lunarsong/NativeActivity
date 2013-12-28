@@ -5,6 +5,7 @@
 #include <android/native_window_jni.h> // requires ndk r5 or newer
 
 #include "AndroidMessage.h"
+#include "INativeInterface.h"
 
 typedef void (*MessageCallbackFunction)( const AndroidMessage& );
 
@@ -14,10 +15,13 @@ public:
 	static void PollEvents();
 	static void SetEventCallback( MessageCallbackFunction pCallback );
 
-	static void SetJNI( JNIEnv* pEnv, jobject pObj );
+	static void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface );
 
 	static ANativeWindow* GetWindow();
 	static bool IsVisible();
+
+	static void ShowKeyboard();
+	static void HideKeyboard();
 
 private:
 	static bool PeekEvent( AndroidMessage& message );
@@ -37,18 +41,35 @@ private:
 	static jmethodID	s_hPeekMessageMethod;
 	static jmethodID	s_hPollMessagesMethod;
 
+	static jmethodID	s_hShowKeyboardMethod;
+	static jmethodID	s_hHideKeyboardMethod;
+
 	// Message class
 	static jclass	s_pMessageClass;
 	static jfieldID	s_hMessageIDField;
 	static jfieldID s_hSurfaceField;
+
+	class NativeInterface : public INativeInterface
+	{
+	public:
+		NativeInterface();
+		~NativeInterface();
+
+		virtual void OnSurfaceChanged( int iFormat, int iWidth, int iHeight );
+
+		virtual void OnTouch( int iPointerID, float fPosX, float fPosY, int iAction );
+		virtual void OnKeyUp( int iKeyCode, int iUnicodeChar );
+	};
+
+	friend class NativeInterface;
 };
 
 #ifndef _LIB
 extern "C"
 {
-	void init_native_activity( JNIEnv* pEnv, jobject pObj )
+	void init_native_activity( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface )
 	{
-		NativeActivity::SetJNI( pEnv, pObj );
+		NativeActivity::SetJNI( pEnv, pObj, pInterface );
 	}
 }
 #endif

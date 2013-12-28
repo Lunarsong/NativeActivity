@@ -16,20 +16,83 @@
 
 enum AndroidMessageType
 {
-	ApplicationShutdown 	= 1001,		// Called on shutdown
+	AndroidMessage_ApplicationShutdown 		= 1001,		// Called on shutdown
 
-	ApplicationPaused 		= 1002,		// Called from onPause callback
-	ApplicationResumed 		= 1003,		// Called from onResume callback
+	AndroidMessage_ApplicationPaused 		= 1002,		// Called from onPause callback
+	AndroidMessage_ApplicationResumed 		= 1003,		// Called from onResume callback
 
-	WindowVisible 			= 1004,		// Called when the window is visible
-	WindowHidden 			= 1005,		// Called when the window is hidden
+	AndroidMessage_WindowVisible 			= 1004,		// Called when the window is visible
+	AndroidMessage_WindowHidden 			= 1005,		// Called when the window is hidden
 
-	SurfaceCreated 			= 1006,		// Called from surfaceCreated callback
-	SurfaceDestroyed 		= 1007,		// Called from surfaceDestroyed callback
-	SurfaceResized 			= 1008		// Called from surfaceChanged callback
+	AndroidMessage_SurfaceCreated 			= 1006,		// Called from surfaceCreated callback
+	AndroidMessage_SurfaceDestroyed 		= 1007,		// Called from surfaceDestroyed callback
+	AndroidMessage_SurfaceChanged 			= 1008,		// Called from surfaceChanged callback
+
+	// Input
+	AndroidMessage_OnTouch					= 1101,		// Called when the user touched the screen
+	AndroidMessage_OnKey					= 1102,		// Called when the user pressed a key
+
+
+	AndroidMessage_Undefined
 };
+
+/*************************************/
+/*       AndroidMessage event		 */
+/*************************************/
 
 struct AndroidMessage
 {
 	int iMessageID;
+	void* pData;
+
+	AndroidMessage()
+	{
+		iMessageID 	= -1;
+		pData		= 0;
+	}
+};
+
+/*************************************/
+/*       SurfaceChanged event		 */
+/*************************************/
+struct AndroidSurfaceChanged
+{
+	int iFormat;
+	int iWidth;
+	int iHeight;
+};
+
+/*************************************/
+/*        AndroidTouch event		 */
+/*************************************/
+struct AndroidTouch
+{
+	enum TouchAction
+	{
+		Action_Down 			= 0,
+		Action_Up				= 1,
+		Action_Move				= 2,
+		Action_Cancel			= 3,
+
+		Action_Outside			= 4,
+
+		Action_SecondaryDown	= 5,
+		Action_SecondaryUp		= 6,
+
+		TouchActionUndefined
+	};
+
+	int			iPointerID;
+	int			iAction;		// = TouchAction
+	float		fPosX;			// Left = 0.0f
+	float		fPosY;			// Top = 0.0f
+};
+
+/*************************************/
+/*          AndroidKey event		 */
+/*************************************/
+struct AndroidKey
+{
+	int iKeyCode;
+	wchar_t iUnicodeChar;
 };
