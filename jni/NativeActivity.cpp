@@ -31,7 +31,6 @@ NativeActivity::NativeActivity()
 
 	// Message methods
 	m_hMessageIDField = NULL;
-	m_hSurfaceField = NULL;
 }
 
 NativeActivity::~NativeActivity()
@@ -65,38 +64,31 @@ bool NativeActivity::PeekEvent( AndroidMessage& message )
 	{
 		message.iMessageID = m_pEnv->GetIntField( pObject, m_hMessageIDField );
 
-		switch ( message.iMessageID )
-		{
-			case AndroidMessage_SurfaceCreated:
-			{
-				jobject pSurface = m_pEnv->GetObjectField( pObject, m_hSurfaceField );
-				m_pWindow = ANativeWindow_fromSurface( m_pEnv, pSurface );
-			} break;
-
-			case AndroidMessage_SurfaceDestroyed:
-			{
-				ANativeWindow_release( m_pWindow );
-				m_pWindow = NULL;
-			} break;
-
-			case AndroidMessage_WindowHidden:
-			{
-				m_bIsVisible = false;
-			} break;
-
-			case AndroidMessage_WindowVisible:
-			{
-				m_bIsVisible = true;
-			} break;
-
-			default:
-				break;
-		}
-
 		return true;
 	}
 
 	return false;
+}
+
+void NativeActivity::DispatchMessage( const AndroidMessage& message )
+{
+	if ( m_pMessageCallback != NULL )
+	{
+		// Send message
+		m_pMessageCallback( message );
+	}
+}
+
+void NativeActivity::DispatchMessage( AndroidMessageType eMessage )
+{
+	if ( m_pMessageCallback != NULL )
+	{
+		AndroidMessage message;
+		message.iMessageID = eMessage;
+
+		// Send message
+		m_pMessageCallback( message );
+	}
 }
 
 void NativeActivity::SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface )
@@ -116,9 +108,29 @@ void NativeActivity::SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInt
 	// Message class
 	m_hMessageClass 	= pEnv->FindClass( "com/lunarsong/android/NativeMessage" );
 	m_hMessageIDField 	= pEnv->GetFieldID( m_hMessageClass, "mID", "I" );
-	m_hSurfaceField 	= pEnv->GetFieldID( m_hMessageClass, "mSurface", "Landroid/view/Surface;" );
 
 	*pInterface = new NativeInterface( this );
+}
+
+void NativeActivity::SetSurface( jobject pSurface )
+{
+	if ( pSurface )
+	{
+		m_pWindow = ANativeWindow_fromSurface( m_pEnv, pSurface );
+
+		DispatchMessage( AndroidMessage_SurfaceCreated );
+	}
+
+	else
+	{
+		if ( m_pWindow )
+		{
+			ANativeWindow_release( m_pWindow );
+			m_pWindow = NULL;
+
+			DispatchMessage( AndroidMessage_SurfaceDestroyed );
+		}
+	}
 }
 
 ANativeWindow* NativeActivity::GetWindow()
@@ -126,9 +138,14 @@ ANativeWindow* NativeActivity::GetWindow()
 	return m_pWindow;
 }
 
-bool NativeActivity::IsVisible()
+bool NativeActivity::IsVisible() const
 {
 	return m_bIsVisible;
+}
+
+void NativeActivity::SetVisible( bool bVisible )
+{
+	m_bIsVisible = bVisible;
 }
 
 void NativeActivity::ShowKeyboard()
@@ -154,47 +171,75 @@ NativeActivity::NativeInterface::~NativeInterface()
 
 }
 
+void NativeActivity::NativeInterface::OnSurfaceCreated( jobject pSurface )
+{
+	m_pActivity->SetSurface( pSurface );
+}
+
 void NativeActivity::NativeInterface::OnSurfaceChanged( int iFormat, int iWidth, int iHeight )
 {
 	LOGV( "[Native] OnSurfaceChanged: Width: %i, Height: %i, Format: %i.", iWidth, iHeight, iFormat );
 
-	if ( m_pActivity->m_pMessageCallback != NULL )
-	{
-		// Create surface data
-		AndroidSurfaceChanged surfaceChanged;
-		surfaceChanged.iFormat 	= iFormat;
-		surfaceChanged.iWidth	= iWidth;
-		surfaceChanged.iHeight	= iHeight;
+	// Create surface data
+	AndroidSurfaceChanged surfaceChanged;
+	surfaceChanged.iFormat 	= iFormat;
+	surfaceChanged.iWidth	= iWidth;
+	surfaceChanged.iHeight	= iHeight;
 
-		// Create message
-		AndroidMessage message;
-		message.iMessageID = AndroidMessage_SurfaceChanged;
-		message.pData = &surfaceChanged;
+	// Create message
+	AndroidMessage message;
+	message.iMessageID = AndroidMessage_SurfaceChanged;
+	message.pData = &surfaceChanged;
 
-		// Send message
-		m_pActivity->m_pMessageCallback( message );
-	}
+	// Send message
+	m_pActivity->DispatchMessage( message );
+}
+
+void NativeActivity::NativeInterface::OnSurfaceDestroyed()
+{
+	m_pActivity->SetSurface( NULL );
+}
+
+void NativeActivity::NativeInterface::OnApplicationPaused()
+{
+	m_pActivity->DispatchMessage( AndroidMessage_ApplicationPaused );
+}
+
+void NativeActivity::NativeInterface::OnApplicationResumed()
+{
+	m_pActivity->DispatchMessage( AndroidMessage_ApplicationResumed );
+}
+
+void NativeActivity::NativeInterface::OnWindowHidden()
+{
+	m_pActivity->SetVisible( false );
+
+	m_pActivity->DispatchMessage( AndroidMessage_WindowHidden );
+}
+
+void NativeActivity::NativeInterface::OnWindowShown()
+{
+	m_pActivity->SetVisible( true );
+
+	m_pActivity->DispatchMessage( AndroidMessage_WindowVisible );
 }
 
 void NativeActivity::NativeInterface::OnTouch( int iPointerID, float fPosX, float fPosY, int iAction )
 {
-	if ( m_pActivity->m_pMessageCallback != NULL )
-	{
-		// Create touch data
-		AndroidTouch touch;
-		touch.iPointerID = iPointerID;
-		touch.fPosX = fPosX;
-		touch.fPosY	= fPosY;
-		touch.iAction = iAction;
+	// Create touch data
+	AndroidTouch touch;
+	touch.iPointerID = iPointerID;
+	touch.fPosX = fPosX;
+	touch.fPosY	= fPosY;
+	touch.iAction = iAction;
 
-		// Create message
-		AndroidMessage message;
-		message.iMessageID = AndroidMessage_OnTouch;
-		message.pData = &touch;
+	// Create message
+	AndroidMessage message;
+	message.iMessageID = AndroidMessage_OnTouch;
+	message.pData = &touch;
 
-		// Send message
-		m_pActivity->m_pMessageCallback( message );
-	}
+	// Send message
+	m_pActivity->DispatchMessage( message );
 }
 
 void NativeActivity::NativeInterface::OnKeyUp( int iKeyCode, int iUnicodeChar )
@@ -210,5 +255,5 @@ void NativeActivity::NativeInterface::OnKeyUp( int iKeyCode, int iUnicodeChar )
 	message.pData = &keyMessage;
 
 	// Send message
-	m_pActivity->m_pMessageCallback( message );
+	m_pActivity->DispatchMessage( message );
 }

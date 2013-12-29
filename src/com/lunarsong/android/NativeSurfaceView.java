@@ -336,7 +336,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		
 		public boolean isVisible()
 		{
-			if ( mPaused == false && mDetached == false && mLostFocus == false && mHasSurface == true )
+			if ( /*mPaused == false &&*/ mDetached == false && mLostFocus == false && mHasSurface == true )
 			{
 				return true;
 			}
@@ -349,14 +349,20 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			mHasSurface = false;
 			handleVisibility();
 			
-			queueMessage( new NativeMessage( NativeMessage.NativeEventType.SurfaceDestroyed ) );
+			NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+			if ( pNativeSurfaceView != null )
+			{				
+				pNativeSurfaceView.nativeOnSurfaceDestroyed();
+			}
 		}
 
 		public void onSurfaceCreated( Surface surface ) 
 		{
-			NativeMessage message = new NativeMessage( NativeMessage.NativeEventType.SurfaceCreated );
-			message.mSurface = surface;
-			queueMessage( message );
+			NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+			if ( pNativeSurfaceView != null )
+			{				
+				pNativeSurfaceView.nativeOnSurfaceCreated( surface );
+			}
 			
 			mHasSurface = true;
 			handleVisibility();			
@@ -378,7 +384,11 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 				if ( isVisible() == false )
 				{
 					// Handle visibility
-					queueMessage( new NativeMessage( NativeMessage.NativeEventType.WindowHidden ) );
+					NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+					if ( pNativeSurfaceView != null )
+					{				
+						pNativeSurfaceView.nativeWindowHidden();
+					}
 					
 					// Save new state
 					mIsVisible = false;
@@ -390,7 +400,11 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 				if ( isVisible() == true )
 				{
 					// Handle visibility
-					queueMessage( new NativeMessage( NativeMessage.NativeEventType.WindowVisible ) );
+					NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+					if ( pNativeSurfaceView != null )
+					{				
+						pNativeSurfaceView.nativeWindowShown();
+					}
 					
 					// Save new state
 					mIsVisible = true;
@@ -447,7 +461,13 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			}
 			
 			mPaused = true;
-			queueMessage( new NativeMessage( NativeMessage.NativeEventType.ApplicationPaused ) );
+			
+			NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+			if ( pNativeSurfaceView != null )
+			{				
+				pNativeSurfaceView.nativeApplicationPaused();
+			}
+			
 			handleVisibility();
 	    }
 
@@ -459,6 +479,12 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	    	}
 	    	
 	    	mPaused = false;
+	    	
+	    	NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+	    	if ( pNativeSurfaceView != null )
+			{				
+				pNativeSurfaceView.nativeApplicationResumed();
+			}
 	    	queueMessage( new NativeMessage( NativeMessage.NativeEventType.ApplicationResumed ) );
 	    	handleVisibility();
 	    	
@@ -697,9 +723,15 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	
 	/* Native methods */
 	public native void nativeMain( String strApplicationName );
+	public native void nativeApplicationPaused();
+	public native void nativeApplicationResumed();
+	public native void nativeWindowShown();
+	public native void nativeWindowHidden();
 	
 	// Surface
 	public native void nativeOnSurfaceChanged( int iFormat, int iWidth, int iHeight );
+	public native void nativeOnSurfaceCreated( Surface surface );
+	public native void nativeOnSurfaceDestroyed();
 	
 	// Input
 	public native void nativeOnTouch( int iIndex, float fPosX, float fPosY, int iAction );

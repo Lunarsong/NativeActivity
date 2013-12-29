@@ -18,7 +18,7 @@ public:
 	void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface );
 
 	ANativeWindow* GetWindow();
-	bool IsVisible();
+	bool IsVisible() const;
 
 	void ShowKeyboard();
 	void HideKeyboard();
@@ -28,6 +28,11 @@ private:
 	~NativeActivity();
 
 	bool PeekEvent( AndroidMessage& message );
+	void DispatchMessage( const AndroidMessage& message );
+	void DispatchMessage( AndroidMessageType eMessage );
+
+	void SetSurface( jobject pSurface );
+	void SetVisible( bool bVisible );
 
 	// Callbacks
 	MessageCallbackFunction m_pMessageCallback;
@@ -50,7 +55,6 @@ private:
 	// Message class
 	jclass		m_hMessageClass;
 	jfieldID	m_hMessageIDField;
-	jfieldID 	m_hSurfaceField;
 
 	class NativeInterface : public INativeInterface
 	{
@@ -58,10 +62,23 @@ private:
 		NativeInterface( NativeActivity* pActivity );
 		~NativeInterface();
 
+		// Surface
 		virtual void OnSurfaceChanged( int iFormat, int iWidth, int iHeight );
+		virtual void OnSurfaceCreated( jobject pSurface );
+		virtual void OnSurfaceDestroyed();
 
+		// Application state
+		virtual void OnApplicationPaused();
+		virtual void OnApplicationResumed();
+
+		// Window state
+		virtual void OnWindowHidden();
+		virtual void OnWindowShown();
+
+		// Input
 		virtual void OnTouch( int iPointerID, float fPosX, float fPosY, int iAction );
 		virtual void OnKeyUp( int iKeyCode, int iUnicodeChar );
+
 
 	private:
 		NativeActivity* m_pActivity;

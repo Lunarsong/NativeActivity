@@ -8,9 +8,15 @@
 extern "C"
 {
     JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplicationName );
-    JNIEXPORT void JNICALL nativeOnTouch( JNIEnv* env, jobject obj, int iPointerID, float fPosX, float fPosY, int iAction );
-    JNIEXPORT void JNICALL nativeOnKeyUp( JNIEnv* env, jobject obj, int iKeyCode, int iUnicodeChar );
-    JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* env, jobject obj, int iFormat, int iWidth, int iHeight );
+    JNIEXPORT void JNICALL nativeOnTouch( JNIEnv* pEnv, jobject pObj, int iPointerID, float fPosX, float fPosY, int iAction );
+    JNIEXPORT void JNICALL nativeOnKeyUp( JNIEnv* pEnv, jobject pObj, int iKeyCode, int iUnicodeChar );
+    JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* pEnv, jobject pObj, int iFormat, int iWidth, int iHeight );
+    JNIEXPORT void JNICALL nativeOnSurfaceCreated( JNIEnv* pEnv, jobject pObj, jobject pSurface );
+    JNIEXPORT void JNICALL nativeOnSurfaceDestroyed( JNIEnv* pEnv, jobject pObj );
+    JNIEXPORT void JNICALL nativeApplicationPaused( JNIEnv* pEnv, jobject pObj );
+    JNIEXPORT void JNICALL nativeApplicationResumed( JNIEnv* pEnv, jobject pObj );
+    JNIEXPORT void JNICALL nativeWindowShown( JNIEnv* pEnv, jobject pObj );
+    JNIEXPORT void JNICALL nativeWindowHidden( JNIEnv* pEnv, jobject pObj );
 
 };
 
@@ -20,6 +26,12 @@ static const JNINativeMethod g_NativeMethods[] =
     { "nativeOnTouch", "(IFFI)V", (void*)nativeOnTouch },
     { "nativeOnKeyUp", "(II)V", (void*)nativeOnKeyUp },
     { "nativeOnSurfaceChanged", "(III)V", (void*)nativeOnSurfaceChanged },
+    { "nativeOnSurfaceCreated", "(Landroid/view/Surface;)V", (void*)nativeOnSurfaceCreated },
+    { "nativeOnSurfaceDestroyed", "()V", (void*)nativeOnSurfaceDestroyed },
+    { "nativeApplicationPaused", "()V", (void*)nativeApplicationPaused },
+    { "nativeApplicationResumed", "()V", (void*)nativeApplicationResumed },
+    { "nativeWindowShown", "()V", (void*)nativeWindowShown },
+    { "nativeWindowHidden", "()V", (void*)nativeWindowHidden },
 };
 
 #define NELEM( x ) ( (int) ( sizeof(x) / sizeof( (x) [0] ) ) )
@@ -94,7 +106,7 @@ JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplic
 	// Call user defined main
 	(*android_main)();
 
-	// Release the nativve interface
+	// Release the native interface
 	delete s_pNativeInterface;
 	s_pNativeInterface = NULL;
 
@@ -122,8 +134,63 @@ JNIEXPORT void JNICALL nativeOnKeyUp( JNIEnv* env, jobject obj, int iKeyCode, in
 
 JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* env, jobject obj, int iFormat, int iWidth, int iHeight )
 {
+	LOGV( "[Native]: nativeOnSurfaceChanged." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnSurfaceChanged( iFormat, iWidth, iHeight );
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnSurfaceCreated( JNIEnv* pEnv, jobject pObj, jobject pSurface )
+{
+	LOGV( "[Native]: nativeOnSurfaceCreated." );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnSurfaceCreated( pSurface );
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnSurfaceDestroyed( JNIEnv* pEnv, jobject pObj )
+{
+	LOGV( "[Native]: nativeOnSurfaceDestroyed." );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnSurfaceDestroyed();
+	}
+}
+
+JNIEXPORT void JNICALL nativeApplicationPaused( JNIEnv* pEnv, jobject pObj )
+{
+	LOGV( "[Native]: nativeApplicationPaused." );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnApplicationPaused();
+	}
+}
+
+JNIEXPORT void JNICALL nativeApplicationResumed( JNIEnv* pEnv, jobject pObj )
+{
+	LOGV( "[Native]: nativeApplicationResumed." );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnApplicationResumed();
+	}
+}
+
+JNIEXPORT void JNICALL nativeWindowShown( JNIEnv* pEnv, jobject pObj )
+{
+	LOGV( "[Native]: nativeWindowShown." );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnWindowShown();
+	}
+}
+
+JNIEXPORT void JNICALL nativeWindowHidden( JNIEnv* pEnv, jobject pObj )
+{
+	LOGV( "[Native]: nativeWindowHidden." );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnWindowHidden();
 	}
 }
