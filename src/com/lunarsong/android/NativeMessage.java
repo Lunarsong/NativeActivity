@@ -42,5 +42,4 @@ public class NativeMessage
 	
 	public NativeEventType mType;
 	public int mID;
-	public Surface mSurface;
 }
