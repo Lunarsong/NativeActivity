@@ -3,83 +3,90 @@
 
 #include <assert.h>
 
-// PollEvents callback
-MessageCallbackFunction NativeActivity::s_mMessageCallback = NULL;
+NativeActivity::NativeActivity()
+{
+	// PollEvents callback
+	m_pMessageCallback = NULL;
 
-// Member variables
-ANativeWindow* NativeActivity::s_pWindow = NULL;
-bool NativeActivity::s_bIsVisible = false;
+	// Member variables
+	m_pWindow = NULL;
+	m_bIsVisible = false;
 
-// JNI Environment
-JNIEnv* NativeActivity::s_pEnv = NULL;
+	// JNI Environment
+	m_pEnv = NULL;
 
-// NativeActivity class and reference
-jobject NativeActivity::s_pObj = NULL;
-jclass NativeActivity::s_pJavaClass = NULL;
+	// NativeActivity class and reference
+	m_pObj = NULL;
+	m_pJavaClass = NULL;
 
-// NativeActivity's methods
-jmethodID	NativeActivity::s_hPeekMessageMethod = NULL;
-jmethodID	NativeActivity::s_hPollMessagesMethod = NULL;
+	// NativeActivity's methods
+	m_hPeekMessageMethod = NULL;
+	m_hPollMessagesMethod = NULL;
 
-jmethodID	NativeActivity::s_hShowKeyboardMethod = NULL;
-jmethodID	NativeActivity::s_hHideKeyboardMethod = NULL;
+	m_hShowKeyboardMethod = NULL;
+	m_hHideKeyboardMethod = NULL;
 
-// Message class
-jclass NativeActivity::s_pMessageClass = NULL;
+	// Message class
+	m_hMessageClass = NULL;
 
-// Message methods
-jfieldID NativeActivity::s_hMessageIDField = NULL;
-jfieldID NativeActivity::s_hSurfaceField = NULL;
+	// Message methods
+	m_hMessageIDField = NULL;
+	m_hSurfaceField = NULL;
+}
 
+NativeActivity::~NativeActivity()
+{
+
+}
 
 void NativeActivity::PollEvents()
 {
-	assert( s_pCallback && "Must set a call message callback!" );
+	assert( m_pCallback && "Must set a call message callback!" );
 
 	// Call Java's poll method
-	s_pEnv->CallVoidMethod( s_pObj, s_hPollMessagesMethod );
+	m_pEnv->CallVoidMethod( m_pObj, m_hPollMessagesMethod );
 
 	AndroidMessage message;
 	while ( PeekEvent( message ) )
 	{
-		s_mMessageCallback( message );
+		m_pMessageCallback( message );
 	}
 }
 
 void NativeActivity::SetEventCallback( MessageCallbackFunction pCallback )
 {
-	s_mMessageCallback = pCallback;
+	m_pMessageCallback = pCallback;
 }
 
 bool NativeActivity::PeekEvent( AndroidMessage& message )
 {
-	jobject pObject = s_pEnv->CallObjectMethod( s_pObj, s_hPeekMessageMethod );
+	jobject pObject = m_pEnv->CallObjectMethod( m_pObj, m_hPeekMessageMethod );
 	if ( pObject )
 	{
-		message.iMessageID = s_pEnv->GetIntField( pObject, s_hMessageIDField );
+		message.iMessageID = m_pEnv->GetIntField( pObject, m_hMessageIDField );
 
 		switch ( message.iMessageID )
 		{
 			case AndroidMessage_SurfaceCreated:
 			{
-				jobject pSurface = s_pEnv->GetObjectField( pObject, s_hSurfaceField );
-				s_pWindow = ANativeWindow_fromSurface( s_pEnv, pSurface );
+				jobject pSurface = m_pEnv->GetObjectField( pObject, m_hSurfaceField );
+				m_pWindow = ANativeWindow_fromSurface( m_pEnv, pSurface );
 			} break;
 
 			case AndroidMessage_SurfaceDestroyed:
 			{
-				ANativeWindow_release( s_pWindow );
-				s_pWindow = NULL;
+				ANativeWindow_release( m_pWindow );
+				m_pWindow = NULL;
 			} break;
 
 			case AndroidMessage_WindowHidden:
 			{
-				s_bIsVisible = false;
+				m_bIsVisible = false;
 			} break;
 
 			case AndroidMessage_WindowVisible:
 			{
-				s_bIsVisible = true;
+				m_bIsVisible = true;
 			} break;
 
 			default:
@@ -94,52 +101,52 @@ bool NativeActivity::PeekEvent( AndroidMessage& message )
 
 void NativeActivity::SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface )
 {
-	s_pEnv = pEnv;
-	s_pObj = pObj;
+	m_pEnv = pEnv;
+	m_pObj = pObj;
 
-	s_pJavaClass = pEnv->GetObjectClass( pObj );
+	m_pJavaClass = pEnv->GetObjectClass( pObj );
 
 	// Retrieve Java methods
-	s_hPeekMessageMethod = pEnv->GetMethodID( s_pJavaClass, "peekMessage", "()Lcom/lunarsong/android/NativeMessage;" );
-	s_hPollMessagesMethod = pEnv->GetMethodID( s_pJavaClass, "pollMessages", "()V" );
+	m_hPeekMessageMethod = pEnv->GetMethodID( m_pJavaClass, "peekMessage", "()Lcom/lunarsong/android/NativeMessage;" );
+	m_hPollMessagesMethod = pEnv->GetMethodID( m_pJavaClass, "pollMessages", "()V" );
 
-	s_hShowKeyboardMethod = pEnv->GetMethodID( s_pJavaClass, "showKeyboard", "()V" );
-	s_hHideKeyboardMethod = pEnv->GetMethodID( s_pJavaClass, "hideKeyboard", "()V" );
+	m_hShowKeyboardMethod = pEnv->GetMethodID( m_pJavaClass, "showKeyboard", "()V" );
+	m_hHideKeyboardMethod = pEnv->GetMethodID( m_pJavaClass, "hideKeyboard", "()V" );
 
 	// Message class
-	s_pMessageClass 	= pEnv->FindClass( "com/lunarsong/android/NativeMessage" );
-	s_hMessageIDField 	= pEnv->GetFieldID( s_pMessageClass, "mID", "I" );
-	s_hSurfaceField 	= pEnv->GetFieldID( s_pMessageClass, "mSurface", "Landroid/view/Surface;" );
+	m_hMessageClass 	= pEnv->FindClass( "com/lunarsong/android/NativeMessage" );
+	m_hMessageIDField 	= pEnv->GetFieldID( m_hMessageClass, "mID", "I" );
+	m_hSurfaceField 	= pEnv->GetFieldID( m_hMessageClass, "mSurface", "Landroid/view/Surface;" );
 
-	*pInterface = new NativeInterface();
+	*pInterface = new NativeInterface( this );
 }
 
 ANativeWindow* NativeActivity::GetWindow()
 {
-	return s_pWindow;
+	return m_pWindow;
 }
 
 bool NativeActivity::IsVisible()
 {
-	return s_bIsVisible;
+	return m_bIsVisible;
 }
 
 void NativeActivity::ShowKeyboard()
 {
-	s_pEnv->CallVoidMethod( s_pObj, s_hShowKeyboardMethod );
+	m_pEnv->CallVoidMethod( m_pObj, m_hShowKeyboardMethod );
 }
 
 void NativeActivity::HideKeyboard()
 {
-	s_pEnv->CallVoidMethod( s_pObj, s_hHideKeyboardMethod );
+	m_pEnv->CallVoidMethod( m_pObj, m_hHideKeyboardMethod );
 }
 
 /**********************************************************************************/
 /*                                 NativeInterface                                */
 /**********************************************************************************/
-NativeActivity::NativeInterface::NativeInterface()
+NativeActivity::NativeInterface::NativeInterface( NativeActivity* pActivity )
 {
-
+	m_pActivity = pActivity;
 }
 
 NativeActivity::NativeInterface::~NativeInterface()
@@ -151,7 +158,7 @@ void NativeActivity::NativeInterface::OnSurfaceChanged( int iFormat, int iWidth,
 {
 	LOGV( "[Native] OnSurfaceChanged: Width: %i, Height: %i, Format: %i.", iWidth, iHeight, iFormat );
 
-	if ( s_mMessageCallback != NULL )
+	if ( m_pActivity->m_pMessageCallback != NULL )
 	{
 		// Create surface data
 		AndroidSurfaceChanged surfaceChanged;
@@ -165,13 +172,13 @@ void NativeActivity::NativeInterface::OnSurfaceChanged( int iFormat, int iWidth,
 		message.pData = &surfaceChanged;
 
 		// Send message
-		s_mMessageCallback( message );
+		m_pActivity->m_pMessageCallback( message );
 	}
 }
 
 void NativeActivity::NativeInterface::OnTouch( int iPointerID, float fPosX, float fPosY, int iAction )
 {
-	if ( s_mMessageCallback != NULL )
+	if ( m_pActivity->m_pMessageCallback != NULL )
 	{
 		// Create touch data
 		AndroidTouch touch;
@@ -186,7 +193,7 @@ void NativeActivity::NativeInterface::OnTouch( int iPointerID, float fPosX, floa
 		message.pData = &touch;
 
 		// Send message
-		s_mMessageCallback( message );
+		m_pActivity->m_pMessageCallback( message );
 	}
 }
 
@@ -203,5 +210,5 @@ void NativeActivity::NativeInterface::OnKeyUp( int iKeyCode, int iUnicodeChar )
 	message.pData = &keyMessage;
 
 	// Send message
-	s_mMessageCallback( message );
+	m_pActivity->m_pMessageCallback( message );
 }

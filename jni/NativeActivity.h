@@ -12,64 +12,61 @@ typedef void (*MessageCallbackFunction)( const AndroidMessage& );
 class NativeActivity
 {
 public:
-	static void PollEvents();
-	static void SetEventCallback( MessageCallbackFunction pCallback );
+	void PollEvents();
+	void SetEventCallback( MessageCallbackFunction pCallback );
 
-	static void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface );
+	void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface );
 
-	static ANativeWindow* GetWindow();
-	static bool IsVisible();
+	ANativeWindow* GetWindow();
+	bool IsVisible();
 
-	static void ShowKeyboard();
-	static void HideKeyboard();
+	void ShowKeyboard();
+	void HideKeyboard();
 
 private:
-	static bool PeekEvent( AndroidMessage& message );
+	NativeActivity();
+	~NativeActivity();
+
+	bool PeekEvent( AndroidMessage& message );
 
 	// Callbacks
-	static MessageCallbackFunction s_mMessageCallback;
+	MessageCallbackFunction m_pMessageCallback;
 
 	// Member variables
-	static ANativeWindow* 	s_pWindow;
-	static bool				s_bIsVisible;
+	ANativeWindow* 	m_pWindow;
+	bool			m_bIsVisible;
 
 	// JNI Variables
-	static JNIEnv* 	s_pEnv;
-	static jobject 	s_pObj;
-	static jclass	s_pJavaClass;
+	JNIEnv* 	m_pEnv;
+	jobject 	m_pObj;
+	jclass		m_pJavaClass;
 
-	static jmethodID	s_hPeekMessageMethod;
-	static jmethodID	s_hPollMessagesMethod;
+	jmethodID	m_hPeekMessageMethod;	// Peek message
+	jmethodID	m_hPollMessagesMethod;	// Poll messages
 
-	static jmethodID	s_hShowKeyboardMethod;
-	static jmethodID	s_hHideKeyboardMethod;
+	jmethodID	m_hShowKeyboardMethod; // Show keyboard
+	jmethodID	m_hHideKeyboardMethod; // Hide keyboard
 
 	// Message class
-	static jclass	s_pMessageClass;
-	static jfieldID	s_hMessageIDField;
-	static jfieldID s_hSurfaceField;
+	jclass		m_hMessageClass;
+	jfieldID	m_hMessageIDField;
+	jfieldID 	m_hSurfaceField;
 
 	class NativeInterface : public INativeInterface
 	{
 	public:
-		NativeInterface();
+		NativeInterface( NativeActivity* pActivity );
 		~NativeInterface();
 
 		virtual void OnSurfaceChanged( int iFormat, int iWidth, int iHeight );
 
 		virtual void OnTouch( int iPointerID, float fPosX, float fPosY, int iAction );
 		virtual void OnKeyUp( int iKeyCode, int iUnicodeChar );
+
+	private:
+		NativeActivity* m_pActivity;
 	};
 
 	friend class NativeInterface;
+	friend class Android;
 };
-
-#ifndef _LIB
-extern "C"
-{
-	void init_native_activity( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface )
-	{
-		NativeActivity::SetJNI( pEnv, pObj, pInterface );
-	}
-}
-#endif
