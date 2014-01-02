@@ -98,4 +98,19 @@ public class NativeActivity extends Activity
     	// Call super
     	super.onDestroy();
     }
+    
+    @Override public void onLowMemory()
+    {
+    	mNativeSurfaceView.queueEvent( new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+            	mNativeSurfaceView.nativeOnLowMemory();
+            }
+        });
+    	
+    	super.onLowMemory();
+    }
+    
 }

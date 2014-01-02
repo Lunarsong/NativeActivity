@@ -841,6 +841,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	public native void nativeApplicationResumed();
 	public native void nativeWindowShown();
 	public native void nativeWindowHidden();
+	public native void nativeOnLowMemory();
 	
 	// Surface
 	public native void nativeOnSurfaceChanged( int iFormat, int iWidth, int iHeight );

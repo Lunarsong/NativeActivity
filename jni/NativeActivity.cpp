@@ -261,6 +261,16 @@ namespace Android
 		m_pActivity->DispatchMessage( AndroidMessage_ApplicationShutdown );
 	}
 
+	void NativeActivity::NativeInterface::OnLowMemory()
+	{
+		if ( m_pActivity->m_pEventHandler )
+		{
+			m_pActivity->m_pEventHandler->OnLowMemory();
+		}
+
+		m_pActivity->DispatchMessage( AndroidMessage_LowMemory );
+	}
+
 	void NativeActivity::NativeInterface::OnApplicationResumed()
 	{
 		if ( m_pActivity->m_pEventHandler )

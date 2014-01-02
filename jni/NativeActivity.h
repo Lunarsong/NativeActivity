@@ -80,6 +80,7 @@ namespace Android
 			virtual void OnApplicationShutdown();
 			virtual void OnApplicationPaused();
 			virtual void OnApplicationResumed();
+			virtual void OnLowMemory();
 
 			// Surface
 			virtual void OnSurfaceChanged( int iFormat, int iWidth, int iHeight );

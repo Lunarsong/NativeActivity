@@ -9,6 +9,7 @@ namespace Android
 		virtual void OnApplicationShutdown() = 0;
 		virtual void OnApplicationPaused() 	= 0;
 		virtual void OnApplicationResumed() = 0;
+		virtual void OnLowMemory()	= 0;
 
 		// Surface
 		virtual void OnSurfaceChanged( int iFormat, int iWidth, int iHeight ) = 0;

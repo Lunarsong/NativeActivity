@@ -22,12 +22,14 @@ namespace Android
 		AndroidMessage_ApplicationPaused 		= 1002,		// Called from onPause callback
 		AndroidMessage_ApplicationResumed 		= 1003,		// Called from onResume callback
 
-		AndroidMessage_WindowVisible 			= 1004,		// Called when the window is visible
-		AndroidMessage_WindowHidden 			= 1005,		// Called when the window is hidden
+		AndroidMessage_LowMemory				= 1004,		// Called when memory is low and should be cleared
 
-		AndroidMessage_SurfaceCreated 			= 1006,		// Called from surfaceCreated callback
-		AndroidMessage_SurfaceDestroyed 		= 1007,		// Called from surfaceDestroyed callback
-		AndroidMessage_SurfaceChanged 			= 1008,		// Called from surfaceChanged callback
+		AndroidMessage_WindowVisible 			= 1005,		// Called when the window is visible
+		AndroidMessage_WindowHidden 			= 1006,		// Called when the window is hidden
+
+		AndroidMessage_SurfaceCreated 			= 1007,		// Called from surfaceCreated callback
+		AndroidMessage_SurfaceDestroyed 		= 1008,		// Called from surfaceDestroyed callback
+		AndroidMessage_SurfaceChanged 			= 1009,		// Called from surfaceChanged callback
 
 		// Input
 		AndroidMessage_OnTouch					= 1101,		// Called when the user touched the screen
