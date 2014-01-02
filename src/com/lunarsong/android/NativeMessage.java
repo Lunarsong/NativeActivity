@@ -1,7 +1,5 @@
 package com.lunarsong.android;
 
-import android.view.Surface;
-
 public class NativeMessage
 {
 	// Events

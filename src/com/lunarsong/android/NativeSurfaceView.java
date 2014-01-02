@@ -1,10 +1,14 @@
 package com.lunarsong.android;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -12,22 +16,23 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.inputmethod.InputMethodManager;
 
 public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 {
-	public static boolean mLogEnabled = true;
+	public static boolean mLogEnabled = false;
 	
 	private NativeThread mNativeThread;
 	private final WeakReference< NativeSurfaceView > mThisWeakRef =
             new WeakReference< NativeSurfaceView >(this);
+	private Handler mHandler;
 	
 	/////////////////////////////////////////////////////////
 	//                    Constructors                     //
 	/////////////////////////////////////////////////////////
-	public NativeSurfaceView( Context context ) 
+	public NativeSurfaceView( Context context, Handler handler ) 
 	{
 		super( context );
+		mHandler = handler;
 		
 		Init( context );
 	}
@@ -71,7 +76,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	    
 	    // Start the NativeThread
 		mNativeThread = new NativeThread( strAppName, mThisWeakRef );
-		mNativeThread.start();
+		mNativeThread.start();		
 	}
 
 
@@ -238,7 +243,10 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		
 		queueEvent( new WindowFocusMessage( mNativeThread, hasWindowFocus ) );
     }
-    
+
+    /////////////////////////////////////////////////////////
+    //            			  Input            			   //
+    /////////////////////////////////////////////////////////
     @Override
     public boolean onTouchEvent( MotionEvent event ) 
     {
@@ -302,22 +310,32 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
     }
     
     /**
-     * Queue a runnable to be run on the GL rendering thread. This can be used
-     * to communicate with the Renderer on the rendering thread.
-     * Must not be called before a renderer has been set.
-     * @param r the runnable to be run on the GL rendering thread.
+     * Queue a runnable to be run on the native thread. This can be used
+     * to communicate with the C++ code.
+     * @param r the runnable to be run on the native thread.
      */
     public void queueEvent(Runnable r) 
     {
     	mNativeThread.queueEvent(r);
     }
     
+    /////////////////////////////////////////////////////////
+    //                  get/set functions                  //
+    /////////////////////////////////////////////////////////
+    public Handler getHandler()
+    {
+    	return mHandler;
+    }
+    
 	/////////////////////////////////////////////////////////
 	//                 class NativeThread                  //
 	/////////////////////////////////////////////////////////
-	@SuppressLint("MissingSuperCall")
 	public static class NativeThread extends Thread
 	{
+		public static final int NATIVE_QUIT = 1001;
+		public static final int NATIVE_KEYBOARD_REQUEST_SHOW = 2001;
+		public static final int NATIVE_KEYBOARD_REQUEST_HIDE = 2002;
+		
 		String mApplicationName;
 		
 		private boolean mExited = false;
@@ -440,6 +458,11 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 				mExited = true;
 				notifyAll();
 			}
+			
+			// Send quit message
+			Message msg = pNativeSurfaceView.mHandler.obtainMessage( NativeThread.NATIVE_QUIT );
+			pNativeSurfaceView.mHandler.sendMessage( msg );
+			
 		}
 		
 		public void onDestroy() 
@@ -485,7 +508,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			{				
 				pNativeSurfaceView.nativeApplicationResumed();
 			}
-	    	queueMessage( new NativeMessage( NativeMessage.NativeEventType.ApplicationResumed ) );
+	    	
 	    	handleVisibility();
 	    	
 	    }
@@ -684,10 +707,86 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
 	// Methods to be called from native
 	// must be called from NativeThread!
+	
+	
+	/**
+	 * @param resourcesPath
+	 * @return - list of files at path
+	 */
+	String[] getAssetsAtPath( String resourcesPath )
+	{
+		String[] arrFiles;
+		try 
+		{
+			arrFiles = getContext().getAssets().list( resourcesPath );
+			
+			return arrFiles;
+		} 
+		
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * @param resourceName
+	 * @return - resource file size, -1 if file not found
+	 */
+	long getAssetSize( String resourceName )
+	{
+		try 
+		{
+			AssetManager pAssets = getContext().getAssets();
+			
+			// Read file length
+			InputStream file = pAssets.open( resourceName );
+			long lFileSize = file.skip( java.lang.Long.MAX_VALUE );
+			file.close();
+			
+			return lFileSize;		
+		} 
+		
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * @param resourceName
+	 * @return - file byte array
+	 */
+	InputStream getAsset( String resourceName )
+	{
+		try 
+		{
+			AssetManager pAssets = getContext().getAssets();
+			
+			// Read file length
+			InputStream file = pAssets.open( resourceName );
+			
+			return file;			
+		} 
+		
+		catch ( IOException e ) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	NativeMessage peekMessage()
 	{
 		NativeMessage message = mNativeThread.peekMessage();
-		
+
 		return message;
 	}
 
@@ -703,11 +802,8 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			Log.d( "NativeActivity", "[Native]: Show keyboard." );
 		}
 		
-		if ( requestFocus() ) 
-    	{
-            InputMethodManager imm = (InputMethodManager)getContext().getSystemService( Context.INPUT_METHOD_SERVICE );
-            imm.showSoftInput( this, InputMethodManager.SHOW_IMPLICIT );
-        }
+		Message msg = mHandler.obtainMessage( NativeThread.NATIVE_KEYBOARD_REQUEST_SHOW );
+		mHandler.sendMessage( msg );
 	}
 	
 	void hideKeyboard()
@@ -717,8 +813,8 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			Log.d( "NativeActivity", "[Native]: Hide keyboard." );
 		}
 		
-		InputMethodManager imm = (InputMethodManager)getContext().getSystemService( Context.INPUT_METHOD_SERVICE );
-        imm.hideSoftInputFromWindow( getWindowToken(), 0 );
+		Message msg = mHandler.obtainMessage( NativeThread.NATIVE_KEYBOARD_REQUEST_HIDE );
+		mHandler.sendMessage( msg );
 	}
 	
 	/* Native methods */

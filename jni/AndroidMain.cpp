@@ -5,6 +5,8 @@
 #include "AndroidLog.h"
 #include "INativeInterface.h"
 
+using namespace Android;
+
 extern "C"
 {
     JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplicationName );
@@ -75,7 +77,7 @@ JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplic
 	void* pLibraryHandle = dlopen( strLibName, RTLD_NOW | RTLD_GLOBAL );
 	if ( !pLibraryHandle )
 	{
-		LOGE( "Could not load library" );
+		LOGE( "Could not load library, error: %s", dlerror() );
 		throw "Error";
 	}
 
@@ -134,7 +136,7 @@ JNIEXPORT void JNICALL nativeOnKeyUp( JNIEnv* env, jobject obj, int iKeyCode, in
 
 JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* env, jobject obj, int iFormat, int iWidth, int iHeight )
 {
-	LOGV( "[Native]: nativeOnSurfaceChanged." );
+	//LOGV( "[Native]: nativeOnSurfaceChanged." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnSurfaceChanged( iFormat, iWidth, iHeight );
@@ -143,7 +145,7 @@ JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* env, jobject obj, int iFo
 
 JNIEXPORT void JNICALL nativeOnSurfaceCreated( JNIEnv* pEnv, jobject pObj, jobject pSurface )
 {
-	LOGV( "[Native]: nativeOnSurfaceCreated." );
+	//LOGV( "[Native]: nativeOnSurfaceCreated." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnSurfaceCreated( pSurface );
@@ -152,7 +154,7 @@ JNIEXPORT void JNICALL nativeOnSurfaceCreated( JNIEnv* pEnv, jobject pObj, jobje
 
 JNIEXPORT void JNICALL nativeOnSurfaceDestroyed( JNIEnv* pEnv, jobject pObj )
 {
-	LOGV( "[Native]: nativeOnSurfaceDestroyed." );
+	//LOGV( "[Native]: nativeOnSurfaceDestroyed." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnSurfaceDestroyed();
@@ -161,7 +163,7 @@ JNIEXPORT void JNICALL nativeOnSurfaceDestroyed( JNIEnv* pEnv, jobject pObj )
 
 JNIEXPORT void JNICALL nativeApplicationPaused( JNIEnv* pEnv, jobject pObj )
 {
-	LOGV( "[Native]: nativeApplicationPaused." );
+	//LOGV( "[Native]: nativeApplicationPaused." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnApplicationPaused();
@@ -170,7 +172,7 @@ JNIEXPORT void JNICALL nativeApplicationPaused( JNIEnv* pEnv, jobject pObj )
 
 JNIEXPORT void JNICALL nativeApplicationResumed( JNIEnv* pEnv, jobject pObj )
 {
-	LOGV( "[Native]: nativeApplicationResumed." );
+	//LOGV( "[Native]: nativeApplicationResumed." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnApplicationResumed();
@@ -179,7 +181,7 @@ JNIEXPORT void JNICALL nativeApplicationResumed( JNIEnv* pEnv, jobject pObj )
 
 JNIEXPORT void JNICALL nativeWindowShown( JNIEnv* pEnv, jobject pObj )
 {
-	LOGV( "[Native]: nativeWindowShown." );
+	//LOGV( "[Native]: nativeWindowShown." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnWindowShown();
@@ -188,7 +190,7 @@ JNIEXPORT void JNICALL nativeWindowShown( JNIEnv* pEnv, jobject pObj )
 
 JNIEXPORT void JNICALL nativeWindowHidden( JNIEnv* pEnv, jobject pObj )
 {
-	LOGV( "[Native]: nativeWindowHidden." );
+	//LOGV( "[Native]: nativeWindowHidden." );
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnWindowHidden();

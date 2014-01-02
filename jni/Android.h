@@ -1,31 +1,30 @@
 #pragma once
 
 #include "NativeActivity.h"
+#include "IAndroidHandler.h"
+#include "AssetManager.h"
 
-class Android
+namespace Android
 {
-public:
-	static void PollEvents();
-	static void SetEventCallback( MessageCallbackFunction pCallback );
+	void PollEvents();
+	void SetEventCallback( MessageCallbackFunction pCallback );
+	void SetEventHandler( IAndroidHandler* pHandler );
 
-	static void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface );
+	void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface );
 
-	static ANativeWindow* GetWindow();
-	static bool IsWindowVisible();
+	ANativeWindow* GetWindow();
+	bool IsWindowVisible();
 
-	static void ShowKeyboard();
-	static void HideKeyboard();
+	void ShowKeyboard();
+	void HideKeyboard();
 
-private:
-	static NativeActivity s_NativeActivity;
+	AssetManager& GetAssetManager();
 };
 
 #ifndef _LIB
 extern "C"
 {
-	void init_native_activity( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface )
-	{
-		Android::SetJNI( pEnv, pObj, pInterface );
-	}
+	void init_native_activity( JNIEnv* pEnv, jobject pObj, Android::INativeInterface** pInterface );
 }
+
 #endif
