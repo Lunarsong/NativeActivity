@@ -10,6 +10,8 @@ using namespace Android;
 extern "C"
 {
     JNIEXPORT void JNICALL nativeMain( JNIEnv* pEnv, jobject pObj, jstring strApplicationName );
+
+    JNIEXPORT void JNICALL nativeOnShutdown( JNIEnv* pEnv, jobject pObj );
     JNIEXPORT void JNICALL nativeOnTouch( JNIEnv* pEnv, jobject pObj, int iPointerID, float fPosX, float fPosY, int iAction );
     JNIEXPORT void JNICALL nativeOnKeyUp( JNIEnv* pEnv, jobject pObj, int iKeyCode, int iUnicodeChar );
     JNIEXPORT void JNICALL nativeOnSurfaceChanged( JNIEnv* pEnv, jobject pObj, int iFormat, int iWidth, int iHeight );
@@ -19,12 +21,13 @@ extern "C"
     JNIEXPORT void JNICALL nativeApplicationResumed( JNIEnv* pEnv, jobject pObj );
     JNIEXPORT void JNICALL nativeWindowShown( JNIEnv* pEnv, jobject pObj );
     JNIEXPORT void JNICALL nativeWindowHidden( JNIEnv* pEnv, jobject pObj );
-
 };
 
 static const JNINativeMethod g_NativeMethods[] =
 {
     { "nativeMain", "(Ljava/lang/String;)V", (void*)nativeMain },
+
+    { "nativeOnShutdown", "()V", (void*)nativeOnShutdown },
     { "nativeOnTouch", "(IFFI)V", (void*)nativeOnTouch },
     { "nativeOnKeyUp", "(II)V", (void*)nativeOnKeyUp },
     { "nativeOnSurfaceChanged", "(III)V", (void*)nativeOnSurfaceChanged },
@@ -194,5 +197,14 @@ JNIEXPORT void JNICALL nativeWindowHidden( JNIEnv* pEnv, jobject pObj )
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnWindowHidden();
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnShutdown( JNIEnv* pEnv, jobject pObj )
+{
+	//LOGV( "[Native]: nativeOnShutdown." );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnApplicationShutdown();
 	}
 }

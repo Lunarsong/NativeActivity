@@ -251,6 +251,16 @@ namespace Android
 		m_pActivity->DispatchMessage( AndroidMessage_ApplicationPaused );
 	}
 
+	void NativeActivity::NativeInterface::OnApplicationShutdown()
+	{
+		if ( m_pActivity->m_pEventHandler )
+		{
+			m_pActivity->m_pEventHandler->OnShutdown();
+		}
+
+		m_pActivity->DispatchMessage( AndroidMessage_ApplicationShutdown );
+	}
+
 	void NativeActivity::NativeInterface::OnApplicationResumed()
 	{
 		if ( m_pActivity->m_pEventHandler )

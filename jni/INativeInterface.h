@@ -5,14 +5,15 @@ namespace Android
 	class INativeInterface
 	{
 	public:
+		// Application state
+		virtual void OnApplicationShutdown() = 0;
+		virtual void OnApplicationPaused() 	= 0;
+		virtual void OnApplicationResumed() = 0;
+
 		// Surface
 		virtual void OnSurfaceChanged( int iFormat, int iWidth, int iHeight ) = 0;
 		virtual void OnSurfaceCreated( jobject pSurface ) = 0;
 		virtual void OnSurfaceDestroyed() = 0;
-
-		// Application state
-		virtual void OnApplicationPaused() 	= 0;
-		virtual void OnApplicationResumed() 	= 0;
 
 		// Window state
 		virtual void OnWindowHidden() 	= 0;

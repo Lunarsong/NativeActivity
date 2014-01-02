@@ -76,14 +76,15 @@ namespace Android
 			NativeInterface( NativeActivity* pActivity );
 			~NativeInterface();
 
+			// Application state
+			virtual void OnApplicationShutdown();
+			virtual void OnApplicationPaused();
+			virtual void OnApplicationResumed();
+
 			// Surface
 			virtual void OnSurfaceChanged( int iFormat, int iWidth, int iHeight );
 			virtual void OnSurfaceCreated( jobject pSurface );
 			virtual void OnSurfaceDestroyed();
-
-			// Application state
-			virtual void OnApplicationPaused();
-			virtual void OnApplicationResumed();
 
 			// Window state
 			virtual void OnWindowHidden();

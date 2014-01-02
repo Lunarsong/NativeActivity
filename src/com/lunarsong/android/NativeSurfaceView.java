@@ -19,7 +19,7 @@ import android.view.SurfaceView;
 
 public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 {
-	public static boolean mLogEnabled = false;
+	public static boolean mLogEnabled = true;
 	
 	private NativeThread mNativeThread;
 	private final WeakReference< NativeSurfaceView > mThisWeakRef =
@@ -545,7 +545,23 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		public void requestExitAndWait() 
 		{
 			// Send shutdown event
-			queueEvent( new NativeMessage( NativeMessage.NativeEventType.ApplicationShutdown ) );
+			queueEvent( new Runnable() 
+	        {
+	            @Override
+	            public void run() 
+	            {
+	            	NativeSurfaceView pNativeSurfaceView = mNativeSurfaceViewWeakRef.get();
+	    			if ( pNativeSurfaceView != null )
+	    			{		
+	    				if ( NativeSurfaceView.mLogEnabled )
+	    				{ 
+	    					Log.d( "NativeActivity", "Calling native shutdown" );
+	    				}
+	    				
+	    				pNativeSurfaceView.nativeOnShutdown();
+	    			}
+	            }
+	        });
 			
 			// Wait for thread to terminate
 	        synchronized( this ) 
@@ -819,6 +835,8 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	
 	/* Native methods */
 	public native void nativeMain( String strApplicationName );
+	
+	public native void nativeOnShutdown();
 	public native void nativeApplicationPaused();
 	public native void nativeApplicationResumed();
 	public native void nativeWindowShown();
