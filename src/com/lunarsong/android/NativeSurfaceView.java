@@ -724,6 +724,10 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	// Methods to be called from native
 	// must be called from NativeThread!
 	
+	String getAppDir()
+	{
+		return getContext().getFilesDir().getAbsolutePath();
+	}
 	
 	/**
 	 * @param resourcesPath

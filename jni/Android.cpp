@@ -50,6 +50,11 @@ namespace Android
 	{
 		return s_NativeActivity.GetAssetManager();
 	}
+
+	const char* GetAppDir()
+	{
+		return s_NativeActivity.GetAppDir();
+	}
 }
 
 extern "C"

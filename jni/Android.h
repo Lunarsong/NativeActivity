@@ -19,6 +19,7 @@ namespace Android
 	void HideKeyboard();
 
 	AssetManager& GetAssetManager();
+	const char* GetAppDir();
 };
 
 #ifndef _LIB

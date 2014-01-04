@@ -13,8 +13,9 @@ namespace Android
 		m_pMessageCallback = NULL;
 
 		// Member variables
-		m_pWindow = NULL;
-		m_bIsVisible = false;
+		m_pAppDir		= NULL;
+		m_pWindow 		= NULL;
+		m_bIsVisible 	= false;
 
 		// JNI Environment
 		m_pEnv = NULL;
@@ -24,11 +25,13 @@ namespace Android
 		m_pJavaClass = NULL;
 
 		// NativeActivity's methods
-		m_hPeekMessageMethod = NULL;
-		m_hPollMessagesMethod = NULL;
+		m_hPeekMessageMethod 	= NULL;
+		m_hPollMessagesMethod 	= NULL;
 
-		m_hShowKeyboardMethod = NULL;
-		m_hHideKeyboardMethod = NULL;
+		m_hShowKeyboardMethod 	= NULL;
+		m_hHideKeyboardMethod 	= NULL;
+
+		m_hGetAppDirMethod		= NULL;
 
 		// Message class
 		m_hMessageClass = NULL;
@@ -40,6 +43,11 @@ namespace Android
 	NativeActivity::~NativeActivity()
 	{
 		m_pEnv->DeleteGlobalRef( m_pObj );
+
+		if ( m_pAppDir )
+		{
+			delete [] m_pAppDir;
+		}
 	}
 
 	JNIEnv* NativeActivity::GetJNI()
@@ -122,15 +130,20 @@ namespace Android
 		m_pJavaClass = pEnv->GetObjectClass( pObj );
 
 		// Retrieve Java methods
-		m_hPeekMessageMethod = pEnv->GetMethodID( m_pJavaClass, "peekMessage", "()Lcom/lunarsong/android/NativeMessage;" );
-		m_hPollMessagesMethod = pEnv->GetMethodID( m_pJavaClass, "pollMessages", "()V" );
+		m_hPeekMessageMethod 	= pEnv->GetMethodID( m_pJavaClass, "peekMessage", "()Lcom/lunarsong/android/NativeMessage;" );
+		m_hPollMessagesMethod 	= pEnv->GetMethodID( m_pJavaClass, "pollMessages", "()V" );
 
-		m_hShowKeyboardMethod = pEnv->GetMethodID( m_pJavaClass, "showKeyboard", "()V" );
-		m_hHideKeyboardMethod = pEnv->GetMethodID( m_pJavaClass, "hideKeyboard", "()V" );
+		m_hShowKeyboardMethod 	= pEnv->GetMethodID( m_pJavaClass, "showKeyboard", "()V" );
+		m_hHideKeyboardMethod 	= pEnv->GetMethodID( m_pJavaClass, "hideKeyboard", "()V" );
+
+		m_hGetAppDirMethod		= pEnv->GetMethodID( m_pJavaClass, "getAppDir", "()Ljava/lang/String;" );
 
 		// Message class
 		m_hMessageClass 	= pEnv->FindClass( "com/lunarsong/android/NativeMessage" );
 		m_hMessageIDField 	= pEnv->GetFieldID( m_hMessageClass, "mID", "I" );
+
+		// Init member variables
+		InitAppDir();
 
 		// Init the Asset Manager
 		m_AssetManager.Init();
@@ -352,5 +365,27 @@ namespace Android
 	AssetManager& NativeActivity::GetAssetManager()
 	{
 		return m_AssetManager;
+	}
+
+	void NativeActivity::InitAppDir()
+	{
+		// Get the application's directory
+		jstring strAppDir = (jstring)m_pEnv->CallObjectMethod( m_pObj, m_hGetAppDirMethod );
+		jsize iStringLength = m_pEnv->GetStringLength( strAppDir );
+		const char* pString = m_pEnv->GetStringUTFChars( strAppDir, NULL );
+
+		// Copy the string
+		m_pAppDir = new char[ iStringLength + 2 ];
+		memcpy( m_pAppDir, pString, iStringLength );
+		m_pAppDir[ iStringLength ] = '/';
+		m_pAppDir[ iStringLength + 1 ] = 0;
+
+		// Release the java string
+		m_pEnv->ReleaseStringUTFChars( strAppDir, pString );
+	}
+
+	const char* NativeActivity::GetAppDir() const
+	{
+		return m_pAppDir;
 	}
 }
