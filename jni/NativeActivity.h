@@ -32,7 +32,6 @@ namespace Android
 		~NativeActivity();
 
 		AssetManager& GetAssetManager();
-
 		const char* GetAppDir() const;
 
 		JNIEnv* GetJNI();
@@ -49,16 +48,14 @@ namespace Android
 		void SetSurface( jobject pSurface );
 		void SetVisible( bool bVisible );
 
-		void InitAppDir();
-
 		// Callbacks
 		MessageCallbackFunction m_pMessageCallback;
 		IAndroidHandler*		m_pEventHandler;
 
 		// Member variables
+		char*			m_pAppDir;
 		ANativeWindow* 	m_pWindow;
 		bool			m_bIsVisible;
-		char*			m_pAppDir;
 
 		// JNI Variables
 		JNIEnv* 	m_pEnv;
@@ -68,10 +65,14 @@ namespace Android
 		jmethodID	m_hPeekMessageMethod;	// Peek message
 		jmethodID	m_hPollMessagesMethod;	// Poll messages
 
-		jmethodID	m_hShowKeyboardMethod; 	// Show keyboard
-		jmethodID	m_hHideKeyboardMethod; 	// Hide keyboard
+		jmethodID	m_hShowKeyboardMethod; // Show keyboard
+		jmethodID	m_hHideKeyboardMethod; // Hide keyboard
 
-		jmethodID	m_hGetAppDirMethod;		// Get files directory
+		jmethodID	m_hGetAppDirMethod;
+
+		// Context
+		jmethodID	m_hGetContextMethod;
+		jobject		m_pContext;
 
 		// Message class
 		jclass		m_hMessageClass;
@@ -109,6 +110,7 @@ namespace Android
 
 		friend class NativeInterface;
 		friend void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface );
+		void InitAppDir();
 	};
 
 }

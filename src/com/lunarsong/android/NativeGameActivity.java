@@ -8,10 +8,9 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
-import android.app.Activity;
 import android.content.Context;
 
-public class NativeActivity extends Activity 
+public class NativeGameActivity extends BaseGameActivity 
 {
 	NativeSurfaceView mNativeSurfaceView;
 	private Handler mHandler;
@@ -44,6 +43,7 @@ public class NativeActivity extends Activity
  				    	{
  				            InputMethodManager imm = (InputMethodManager)getSystemService( Context.INPUT_METHOD_SERVICE );
  				            imm.showSoftInput( mNativeSurfaceView, InputMethodManager.SHOW_IMPLICIT );
+ 				           //beginUserInitiatedSignIn();
  				        }
 
  					} break;
@@ -54,6 +54,9 @@ public class NativeActivity extends Activity
 
  						InputMethodManager imm = (InputMethodManager)getSystemService( Context.INPUT_METHOD_SERVICE );
  				        imm.hideSoftInputFromWindow( mNativeSurfaceView.getWindowToken(), 0 );
+ 				       //startActivityForResult( getGamesClient().getAchievementsIntent(), 0);
+ 				        //getGamesClient().submitScore( "CgkIp8rf-fkTEAIQCA", 500 );
+ 				       //startActivityForResult(getGamesClient().getLeaderboardIntent( "CgkIp8rf-fkTEAIQCA" ), 1);
  					} break;
  				
  					default:
@@ -65,11 +68,12 @@ public class NativeActivity extends Activity
  		};
         
         // Create the native surface view
-        mNativeSurfaceView = new NativeSurfaceView( getApplication(), mHandler );
+        mNativeSurfaceView = new NativeSurfaceView( this, mHandler );
         mNativeSurfaceView.setFocusable(true);
         mNativeSurfaceView.setFocusableInTouchMode(true);
         
         setContentView( mNativeSurfaceView );
+        getGamesClient().setViewForPopups( mNativeSurfaceView );
     }
     
     @Override protected void onPause()
@@ -112,5 +116,19 @@ public class NativeActivity extends Activity
     	
     	super.onLowMemory();
     }
+
+	@Override
+	public void onSignInFailed() 
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSignInSucceeded() 
+	{
+		// TODO Auto-generated method stub
+		//showAlert( "Test" );
+	}
     
 }

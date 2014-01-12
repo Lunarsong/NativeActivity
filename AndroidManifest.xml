@@ -9,7 +9,13 @@
         android:targetSdkVersion="19" />
 
     <application>
+        <meta-data android:name="com.google.android.gms.version"
+           android:value="@integer/google_play_services_version" />
+        
         <activity android:name="com.lunarsong.android.NativeActivity" 
+            android:configChanges="keyboardHidden|keyboard|orientation|screenSize" />
+        
+        <activity android:name="com.lunarsong.android.NativeGameActivity" 
             android:configChanges="keyboardHidden|keyboard|orientation|screenSize" />
     </application>
 

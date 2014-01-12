@@ -37,11 +37,11 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		Init( context );
 	}
 	
-	public NativeSurfaceView( Context context, AttributeSet attrs ) 
+	/*public NativeSurfaceView( Context context, AttributeSet attrs ) 
 	{
         super( context, attrs );
         Init( context );
-    }
+    }*/
 	
 	@Override
     protected void finalize() throws Throwable 
@@ -76,7 +76,9 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	    
 	    // Start the NativeThread
 		mNativeThread = new NativeThread( strAppName, mThisWeakRef );
-		mNativeThread.start();		
+		mNativeThread.start();
+		
+		Log.v( "NativeActivity", getContext().getFilesDir().getAbsolutePath() );
 	}
 
 
@@ -331,11 +333,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	//                 class NativeThread                  //
 	/////////////////////////////////////////////////////////
 	public static class NativeThread extends Thread
-	{
-		public static final int NATIVE_QUIT = 1001;
-		public static final int NATIVE_KEYBOARD_REQUEST_SHOW = 2001;
-		public static final int NATIVE_KEYBOARD_REQUEST_HIDE = 2002;
-		
+	{		
 		String mApplicationName;
 		
 		private boolean mExited = false;
@@ -460,7 +458,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			}
 			
 			// Send quit message
-			Message msg = pNativeSurfaceView.mHandler.obtainMessage( NativeThread.NATIVE_QUIT );
+			Message msg = pNativeSurfaceView.mHandler.obtainMessage( NativeMessage.NATIVE_QUIT );
 			pNativeSurfaceView.mHandler.sendMessage( msg );
 			
 		}
@@ -724,10 +722,6 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	// Methods to be called from native
 	// must be called from NativeThread!
 	
-	String getAppDir()
-	{
-		return getContext().getFilesDir().getAbsolutePath();
-	}
 	
 	/**
 	 * @param resourcesPath
@@ -815,6 +809,19 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		mNativeThread.handleEvents();
 	}
 	
+	void messageFromNative( int iMessage, String content )
+	{
+		if ( mLogEnabled )
+		{
+			Log.d( "NativeActivity", "[Native]: messageFromNative: " + iMessage + ", " + content + "." );
+		}
+		
+		Message msg = mHandler.obtainMessage( iMessage );
+		msg.obj = content;
+		
+		mHandler.sendMessage( msg );
+	}
+	
 	void showKeyboard()
 	{
 		if ( mLogEnabled )
@@ -822,7 +829,7 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			Log.d( "NativeActivity", "[Native]: Show keyboard." );
 		}
 		
-		Message msg = mHandler.obtainMessage( NativeThread.NATIVE_KEYBOARD_REQUEST_SHOW );
+		Message msg = mHandler.obtainMessage( NativeMessage.NATIVE_KEYBOARD_REQUEST_SHOW );
 		mHandler.sendMessage( msg );
 	}
 	
@@ -833,9 +840,15 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 			Log.d( "NativeActivity", "[Native]: Hide keyboard." );
 		}
 		
-		Message msg = mHandler.obtainMessage( NativeThread.NATIVE_KEYBOARD_REQUEST_HIDE );
+		Message msg = mHandler.obtainMessage( NativeMessage.NATIVE_KEYBOARD_REQUEST_HIDE );
 		mHandler.sendMessage( msg );
 	}
+	
+	String getAppDir()
+	{
+		return getContext().getFilesDir().getAbsolutePath();
+	}
+
 	
 	/* Native methods */
 	public native void nativeMain( String strApplicationName );

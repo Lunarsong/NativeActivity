@@ -29,6 +29,25 @@ public class NativeMessage
 		}
 	}
 	
+	// Messages from Native
+	public static final int NATIVE_QUIT = 1001;
+	public static final int NATIVE_KEYBOARD_REQUEST_SHOW = 2001;
+	public static final int NATIVE_KEYBOARD_REQUEST_HIDE = 2002;
+	
+	/***************************************************************/
+	/*************** Google Play Services Messages *****************/
+	/***************************************************************/
+	
+	// Leaderboards
+	public static final int NATIVE_PLAYSERVICES_LEADERBOARD_SHOW			 	= 8001;
+	public static final int NATIVE_PLAYSERVICES_LEADERBOARD_SCORE_SUBMIT	 	= 8002;
+	
+	// Achievements
+	public static final int NATIVE_PLAYSERVICES_ACHIEVEMENTS_SHOW		 		= 8011;
+	public static final int NATIVE_PLAYSERVICES_ACHIEVEMENTS_UNLOCK		 		= 8012;
+	public static final int NATIVE_PLAYSERVICES_ACHIEVEMENTS_INCREMENT	 		= 8013;
+	
+	
 	/**
 	 * @param eType
 	 */

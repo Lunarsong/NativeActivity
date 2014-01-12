@@ -1,5 +1,6 @@
 #include "NativeActivity.h"
 #include "AndroidLog.h"
+#include "GooglePlayServices.h"
 
 #include <assert.h>
 
@@ -38,11 +39,16 @@ namespace Android
 
 		// Message methods
 		m_hMessageIDField = NULL;
+
+		// Context
+		m_hGetContextMethod 	= NULL;
+		m_pContext 				= NULL;
 	}
 
 	NativeActivity::~NativeActivity()
 	{
 		m_pEnv->DeleteGlobalRef( m_pObj );
+		m_pEnv->DeleteGlobalRef( m_pContext );
 
 		if ( m_pAppDir )
 		{
@@ -145,8 +151,14 @@ namespace Android
 		// Init member variables
 		InitAppDir();
 
+		// Context
+		m_hGetContextMethod	= pEnv->GetMethodID( m_pJavaClass, "getContext", "()Landroid/content/Context;" );
+		m_pContext			= pEnv->NewGlobalRef( pEnv->CallObjectMethod( m_pObj, m_hGetContextMethod ) );
+
 		// Init the Asset Manager
 		m_AssetManager.Init();
+
+		GooglePlayServices::Init( pEnv, m_pContext );
 
 		*pInterface = new NativeInterface( this );
 	}
@@ -388,4 +400,5 @@ namespace Android
 	{
 		return m_pAppDir;
 	}
+
 }
