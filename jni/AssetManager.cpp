@@ -8,6 +8,9 @@
 #include "AssetManager.h"
 #include "NativeActivity.h"
 #include "AndroidLog.h"
+
+#include <string.h>
+
 namespace Android
 {
 	AssetManager::AssetManager( NativeActivity* pNativeActivity )
@@ -45,46 +48,67 @@ namespace Android
 
 	}
 
-	size_t AssetManager::GetAssetsAtPath( const char* strPath, std::vector< std::string >& out ) const
+	Paths* AssetManager::GetAssetsAtPath( const char* strPath ) const
 	{
 		//LOGV( "[GetAssetsAtPath] Looking up path: %s.", strPath );
-
+		Paths* pPaths = NULL; // return value
 		size_t lArrayLength = 0;
-		out.clear();
 
+		// Create the path string to retrieve paths from
 		jstring jStringPath = m_pEnv->NewStringUTF( strPath );
+
+		// Call function
 		jobjectArray jArray = (jobjectArray)m_pEnv->CallObjectMethod( m_pObject, m_hGetAssetsAtPath, jStringPath );
+
+		// Release string
 		m_pEnv->DeleteLocalRef( jStringPath );
+
 		if ( jArray )
 		{
+			// Get the number of paths retrieved
 			lArrayLength = m_pEnv->GetArrayLength( jArray );
-			if ( lArrayLength > out.capacity() )
+			if ( lArrayLength > 0 )
 			{
-				out.reserve( lArrayLength );
-			}
+				// Create the paths array
+				char** pPathsArray = new char* [ lArrayLength ];
 
-			//LOGV( "Paths Array Length: %i ", pEnv->GetArrayLength( jArray ) );
+				//LOGV( "Paths Array Length: %i ", pEnv->GetArrayLength( jArray ) );
 
-			for ( size_t i = 0; i < lArrayLength; ++i )
-			{
-				jstring strFile = (jstring)m_pEnv->GetObjectArrayElement( jArray, i );
-				const char* pFileString = m_pEnv->GetStringUTFChars( strFile, NULL );
+				// Copy the paths' strings
+				for ( size_t i = 0; i < lArrayLength; ++i )
+				{
+					// Get the current path's string
+					jstring strFile = (jstring)m_pEnv->GetObjectArrayElement( jArray, i );
+					const char* pFileString = m_pEnv->GetStringUTFChars( strFile, NULL );
 
-				//LOGV( "%s", pFileString );
+					//LOGV( "%s", pFileString );
 
-				out.push_back( pFileString );
+					// String's size
+					size_t lStringLength = m_pEnv->GetStringLength( strFile );
 
-				m_pEnv->ReleaseStringUTFChars( strFile, pFileString );
+					// Create a copy c string
+					pPathsArray[ i ] = new char [ lStringLength + 1 ];
+					memcpy( pPathsArray[ i ], pFileString, lStringLength );
+
+					// Null terminating character
+					pPathsArray[ i ][ lStringLength ] = 0;
+
+					// Release the string
+					m_pEnv->ReleaseStringUTFChars( strFile, pFileString );
+				}
+
+				// Create the paths class
+				pPaths = new Paths( pPathsArray, lArrayLength );
 			}
 		}
 
-		return lArrayLength;
+		return pPaths;
 	}
 
-	size_t AssetManager::GetAssetSize( const char* strFile ) const
+	unsigned long AssetManager::GetAssetSize( const char* strFile ) const
 	{
 		jstring jStringPath = m_pEnv->NewStringUTF( strFile );
-		long lFileSize = m_pEnv->CallLongMethod( m_pObject, m_hGetAssetSize, jStringPath );
+		unsigned long lFileSize = m_pEnv->CallLongMethod( m_pObject, m_hGetAssetSize, jStringPath );
 		m_pEnv->DeleteLocalRef( jStringPath );
 
 		//LOGV( "[AssetManager] GetAssetSize: (%s, %ld)", strFile, lFileSize );
@@ -92,9 +116,9 @@ namespace Android
 		return lFileSize;
 	}
 
-	size_t AssetManager::GetAssetSize( jstring strFilename ) const
+	unsigned long AssetManager::GetAssetSize( jstring strFilename ) const
 	{
-		long lFileSize = m_pEnv->CallLongMethod( m_pObject, m_hGetAssetSize, strFilename );
+		unsigned long lFileSize = m_pEnv->CallLongMethod( m_pObject, m_hGetAssetSize, strFilename );
 
 		//LOGV( "[AssetManager] _GetAssetSize: (%ld)", lFileSize );
 
@@ -107,7 +131,7 @@ namespace Android
 		jstring jStringPath = m_pEnv->NewStringUTF( strFile );
 
 		// Retrieve file size and see if it is non zero
-		size_t lAssetSize = GetAssetSize( jStringPath );
+		unsigned long lAssetSize = GetAssetSize( jStringPath );
 		if ( lAssetSize <= 0 )
 		{
 			m_pEnv->DeleteLocalRef( jStringPath );

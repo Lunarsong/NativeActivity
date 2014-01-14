@@ -2,6 +2,7 @@
 #include "AndroidLog.h"
 #include "GooglePlayServices.h"
 
+#include <string.h>
 #include <assert.h>
 
 namespace Android

@@ -8,7 +8,6 @@
 #ifndef ASSET_H_
 #define ASSET_H_
 
-#include <string>
 #include <jni.h>
 
 namespace Android
@@ -18,17 +17,16 @@ namespace Android
 	public:
 		virtual ~Asset();
 
-		long Size() const;
-		long Read( char* pBuffer, long lBytesToRead ); // returns bytes read
+		unsigned long Size() const;
+		unsigned long Read( char* pBuffer, long lBytesToRead ); // returns bytes read
 
-		long Position() const; // returns buffer position
+		unsigned long Position() const; // returns buffer position
 
 	private:
-		std::string m_Filename;
-		long 	m_lSize;
-		long	m_lBufferPosition;
+		unsigned long 	m_ulSize;
+		unsigned long	m_ulBufferPosition;
 
-		Asset( const char* pFilename, jobject pReaderObject, size_t lSize );
+		Asset( const char* pFilename, jobject pReaderObject, unsigned long ulSize );
 
 		static void Init( JNIEnv* pEnv );
 

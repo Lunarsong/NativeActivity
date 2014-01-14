@@ -10,10 +10,8 @@
 
 #include <jni.h>
 
-#include <vector>
-#include <string>
-
 #include "Asset.h"
+#include "Paths.h"
 
 namespace Android
 {
@@ -23,8 +21,8 @@ namespace Android
 	public:
 		virtual ~AssetManager();
 
-		size_t GetAssetsAtPath( const char* strPath, std::vector< std::string >& out ) const;	// fills "out" with files at "strPath"
-		size_t GetAssetSize( const char* strFile ) const;
+		Paths* GetAssetsAtPath( const char* strPath ) const;	// fills "out" with files at "strPath"
+		unsigned long GetAssetSize( const char* strFile ) const;
 		Asset* GetAsset( const char* strFile ) const;
 
 	private:
@@ -43,7 +41,7 @@ namespace Android
 
 		friend class NativeActivity;
 
-		size_t GetAssetSize( jstring strFilename ) const;
+		unsigned long GetAssetSize( jstring strFilename ) const;
 	};
 }
 

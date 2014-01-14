@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := NativeActivity
-LOCAL_SRC_FILES := NativeActivity.cpp Android.cpp Asset.cpp AssetManager.cpp GoogleGames.cpp GooglePlayServices.cpp GooglePlus.cpp
+LOCAL_SRC_FILES := NativeActivity.cpp Android.cpp Asset.cpp AssetManager.cpp GoogleGames.cpp GooglePlayServices.cpp GooglePlus.cpp Paths.cpp
 LOCAL_CFLAGS    := -Wall -fexceptions -frtti
 LOCAL_CPPFLAGS  := -DNULL=0  -D_LIB=1
 

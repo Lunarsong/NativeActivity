@@ -7,6 +7,7 @@
 
 #include "Asset.h"
 #include "AndroidLog.h"
+#include <string.h>
 
 namespace Android
 {
@@ -29,13 +30,13 @@ namespace Android
 		s_hReadMethod = pEnv->GetMethodID( s_pClass, "read", "([BII)I" );
 	}
 
-	Asset::Asset( const char* pFilename, jobject pReaderObject, size_t lSize )
+	Asset::Asset( const char* pFilename, jobject pReaderObject, unsigned long ulSize )
 	{
-		m_Filename = pFilename;
+		//m_Filename = pFilename;
 		m_pObject = s_pEnv->NewGlobalRef( pReaderObject );
 
-		m_lSize = lSize;
-		m_lBufferPosition = 0;
+		m_ulSize = ulSize;
+		m_ulBufferPosition = 0;
 	}
 
 	Asset::~Asset()
@@ -44,12 +45,12 @@ namespace Android
 		s_pEnv->DeleteGlobalRef( m_pObject );
 	}
 
-	long Asset::Size() const
+	unsigned long Asset::Size() const
 	{
-		return m_lSize;
+		return m_ulSize;
 	}
 
-	long Asset::Read( char* pBuffer, long lBytesToRead ) // returns bytes read
+	unsigned long Asset::Read( char* pBuffer, long lBytesToRead ) // returns bytes read
 	{
 		// Create java byte array
 		jbyteArray arrBytes = s_pEnv->NewByteArray( lBytesToRead );
@@ -68,13 +69,13 @@ namespace Android
 		s_pEnv->DeleteLocalRef( arrBytes );
 
 		// Increment position
-		m_lBufferPosition += lBytesRead;
+		m_ulBufferPosition += lBytesRead;
 
 		return lBytesRead;
 	}
 
-	long Asset::Position() const // returns buffer position
+	unsigned long Asset::Position() const // returns buffer position
 	{
-		return m_lBufferPosition;
+		return m_ulBufferPosition;
 	}
 }
