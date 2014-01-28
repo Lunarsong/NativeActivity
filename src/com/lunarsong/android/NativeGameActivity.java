@@ -120,15 +120,28 @@ public class NativeGameActivity extends BaseGameActivity
 	@Override
 	public void onSignInFailed() 
 	{
-		// TODO Auto-generated method stub
-		
+		mNativeSurfaceView.queueEvent( new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+            	mNativeSurfaceView.nativeOnSignInFailed();
+            }
+        });		
 	}
-
+	
 	@Override
 	public void onSignInSucceeded() 
 	{
-		// TODO Auto-generated method stub
-		//showAlert( "Test" );
+		final String accountName = "disabled";//getGamesClient().getCurrentAccountName();
+		mNativeSurfaceView.queueEvent( new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+            	mNativeSurfaceView.nativeOnSignInSucceeded( accountName );
+            }
+        });
 	}
     
 }

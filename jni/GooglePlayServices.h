@@ -11,12 +11,19 @@
 
 namespace Android
 {
+	class ISignInListener;
+
 	class GooglePlayServices
 	{
 	public:
+		static void SetSignInListener( ISignInListener* pListener );
 		static void SignIn();
 		static void SignOut();
+
 		static bool IsSignedIn();
+
+		//static const char* GetAccountName();
+
 		static void ShowAlert( const char* pMessageString );
 		static void ShowAlert( const char* pTitleString, const char* pMessageString );
 
@@ -42,9 +49,29 @@ namespace Android
 		static JNIEnv* 	m_pEnv;
 		static jobject 	m_pObj;
 		static jclass	m_jClass;
+
+		// Account
+		static char* m_pAccountName;
+
+		// Sign-in listener
+		static ISignInListener* s_pSignInListener;
+
 		static void Init( JNIEnv* pEnv, jobject pObj );
+		static void Shutdown();
+
+		static void OnSignInSucceeded( char* pAccountName );
+		static void OnSignInFailed();
 
 		friend class NativeActivity;
+	};
+
+	class ISignInListener
+	{
+	public:
+		virtual void OnSignInSucceeded() 	= 0;
+		virtual void OnSignInFailed() 		= 0;
+
+		virtual ~ISignInListener() { }
 	};
 
 } /* namespace Android */

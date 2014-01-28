@@ -860,6 +860,10 @@ public class NativeSurfaceView extends SurfaceView implements SurfaceHolder.Call
 	public native void nativeWindowHidden();
 	public native void nativeOnLowMemory();
 	
+	public native void nativeOnSignInSucceeded( String accountName );
+	public native void nativeOnSignInFailed();
+	
+	
 	// Surface
 	public native void nativeOnSurfaceChanged( int iFormat, int iWidth, int iHeight );
 	public native void nativeOnSurfaceCreated( Surface surface );

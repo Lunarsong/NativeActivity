@@ -154,7 +154,6 @@ public abstract class BaseGameActivity extends FragmentActivity implements
 
     public void beginUserInitiatedSignIn() 
     {
-    	Log.e( "Native", "logging in" );
     	final Runnable r = new Runnable()
     	{
     		public void run()
@@ -168,7 +167,6 @@ public abstract class BaseGameActivity extends FragmentActivity implements
 
     public void signOut() 
     {
-    	Log.e( "Native", "logging out" );
     	final Runnable r = new Runnable()
     	{
     		public void run()
@@ -409,4 +407,25 @@ public abstract class BaseGameActivity extends FragmentActivity implements
     
     	mGameHandler.post( new SetAchievementStepsRunnable( achievementID, iNumSteps ) );
     }
+    
+    // Google Plus
+    /*protected void plusLoadPeople()
+    {
+    	
+    }
+    
+    protected void plusLoadConnectedPeople()
+    {
+    	
+    }
+    
+    protected void plusLoadVisiblePeople()
+    {
+    	
+    }
+    
+    protected void plusShare()
+    {
+    	
+    }*/
 }

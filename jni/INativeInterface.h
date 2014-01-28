@@ -24,6 +24,10 @@ namespace Android
 		virtual void OnTouch( int iPointerID, float fPosX, float fPosY, int iAction ) = 0;
 		virtual void OnKeyUp( int iKeyCode, int iUnicodeChar ) = 0;
 
+		// Play Services
+		virtual void OnSignInSucceeded( char* pAccountName )	= 0;
+		virtual void OnSignInFailed()		= 0;
+
 		virtual ~INativeInterface() { }
 	};
 }

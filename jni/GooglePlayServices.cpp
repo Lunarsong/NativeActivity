@@ -7,7 +7,9 @@
 
 #include "GooglePlayServices.h"
 #include "GoogleGames.h"
+#include "GooglePlus.h"
 #include "AndroidLog.h"
+#include <cstring>
 
 namespace Android
 {
@@ -32,6 +34,10 @@ namespace Android
 	jobject GooglePlayServices::m_pObj 		= NULL;
 	jclass	GooglePlayServices::m_jClass	= NULL;
 
+	char*	GooglePlayServices::m_pAccountName = NULL;
+
+	ISignInListener* GooglePlayServices::s_pSignInListener = NULL;
+
 	void GooglePlayServices::Init( JNIEnv* pEnv, jobject pObj )
 	{
 		LOGV( "Initialising GooglePlayServices" );
@@ -50,6 +56,50 @@ namespace Android
 		m_hHasSignInErrorMethod 			= m_pEnv->GetMethodID( m_jClass, "hasSignInError", "()Z" );
 
 		GoogleGames::Init( pEnv, pObj, m_jClass );
+		GooglePlus::Init( pEnv, pObj, m_jClass );
+	}
+
+	void GooglePlayServices::Shutdown()
+	{
+		if ( m_pAccountName )
+		{
+			delete [] m_pAccountName;
+			m_pAccountName = NULL;
+		}
+	}
+
+	/*const char* GooglePlayServices::GetAccountName()
+	{
+		return m_pAccountName;
+	}*/
+
+	void GooglePlayServices::OnSignInSucceeded( char* pAccountName  )
+	{
+		if ( m_pAccountName )
+		{
+			delete [] m_pAccountName;
+			m_pAccountName = NULL;
+		}
+
+		m_pAccountName = pAccountName;
+
+		if ( s_pSignInListener )
+		{
+			s_pSignInListener->OnSignInSucceeded();
+		}
+	}
+
+	void GooglePlayServices::OnSignInFailed()
+	{
+		if ( s_pSignInListener )
+		{
+			s_pSignInListener->OnSignInFailed();
+		}
+	}
+
+	void GooglePlayServices::SetSignInListener( ISignInListener* pListener )
+	{
+		s_pSignInListener = pListener;
 	}
 
 	void GooglePlayServices::SignIn()

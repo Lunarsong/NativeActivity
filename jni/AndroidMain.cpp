@@ -22,6 +22,10 @@ extern "C"
     JNIEXPORT void JNICALL nativeApplicationResumed( JNIEnv* pEnv, jobject pObj );
     JNIEXPORT void JNICALL nativeWindowShown( JNIEnv* pEnv, jobject pObj );
     JNIEXPORT void JNICALL nativeWindowHidden( JNIEnv* pEnv, jobject pObj );
+
+    // Google Play Services
+    JNIEXPORT void JNICALL nativeOnSignInSucceeded( JNIEnv* pEnv, jobject pObj, jstring strAccountName );
+    JNIEXPORT void JNICALL nativeOnSignInFailed( JNIEnv* pEnv, jobject pObj );
 };
 
 static const JNINativeMethod g_NativeMethods[] =
@@ -39,6 +43,10 @@ static const JNINativeMethod g_NativeMethods[] =
     { "nativeApplicationResumed", "()V", (void*)nativeApplicationResumed },
     { "nativeWindowShown", "()V", (void*)nativeWindowShown },
     { "nativeWindowHidden", "()V", (void*)nativeWindowHidden },
+
+    // Google Play Services
+    { "nativeOnSignInSucceeded", "(Ljava/lang/String;)V", (void*)nativeOnSignInSucceeded },
+    { "nativeOnSignInFailed", "()V", (void*)nativeOnSignInFailed },
 };
 
 #define NELEM( x ) ( (int) ( sizeof(x) / sizeof( (x) [0] ) ) )
@@ -217,5 +225,35 @@ JNIEXPORT void JNICALL nativeOnLowMemory( JNIEnv* pEnv, jobject pObj )
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnLowMemory();
+	}
+}
+
+/*
+ * Google Play Services
+ */
+JNIEXPORT void JNICALL nativeOnSignInSucceeded( JNIEnv* pEnv, jobject pObj, jstring strAccountName )
+{
+	jsize iStringLength = pEnv->GetStringLength( strAccountName );
+	const char* pString = pEnv->GetStringUTFChars( strAccountName, NULL );
+
+	// Copy the string
+	char* pAccountName = new char[ iStringLength + 1 ];
+	memcpy( pAccountName, pString, iStringLength );
+	pAccountName[ iStringLength ] = 0;
+
+	// Release the java string
+	pEnv->ReleaseStringUTFChars( strAccountName, pString );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnSignInSucceeded( pAccountName );
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnSignInFailed( JNIEnv* pEnv, jobject pObj )
+{
+	LOGE( "sign in failed!" );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->OnSignInFailed();
 	}
 }

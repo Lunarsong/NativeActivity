@@ -48,6 +48,8 @@ namespace Android
 
 	NativeActivity::~NativeActivity()
 	{
+		GooglePlayServices::Shutdown();
+
 		m_pEnv->DeleteGlobalRef( m_pObj );
 		m_pEnv->DeleteGlobalRef( m_pContext );
 
@@ -373,6 +375,16 @@ namespace Android
 
 		// Send message
 		m_pActivity->DispatchMessage( message );
+	}
+
+	void NativeActivity::NativeInterface::OnSignInSucceeded( char* pAccountName )
+	{
+		GooglePlayServices::OnSignInSucceeded( pAccountName );
+	}
+
+	void NativeActivity::NativeInterface::OnSignInFailed()
+	{
+		GooglePlayServices::OnSignInFailed();
 	}
 
 	AssetManager& NativeActivity::GetAssetManager()
