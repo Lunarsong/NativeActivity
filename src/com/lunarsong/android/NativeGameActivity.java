@@ -12,14 +12,21 @@ import android.content.Context;
 
 public class NativeGameActivity extends BaseGameActivity 
 {
-	NativeSurfaceView mNativeSurfaceView;
-	private Handler mHandler;
+	CloudSaveHelper		mCloudSaveHelper;
+	NativeSurfaceView 	mNativeSurfaceView;
+	private Handler 	mHandler;
+	
+	public NativeGameActivity() 
+	{
+        // Request AppStateClient and GamesClient
+        super( BaseGameActivity.CLIENT_APPSTATE | BaseGameActivity.CLIENT_GAMES );
+    }
 	
     @Override
     protected void onCreate( Bundle savedInstanceState ) 
     {
         super.onCreate( savedInstanceState );
-        
+                
         // Create handler
  		mHandler = new Handler( Looper.getMainLooper() )
  		{
@@ -67,6 +74,9 @@ public class NativeGameActivity extends BaseGameActivity
  			}
  		};
         
+ 		// Create helpers
+ 		mCloudSaveHelper = new CloudSaveHelper( this );
+ 		
         // Create the native surface view
         mNativeSurfaceView = new NativeSurfaceView( this, mHandler );
         mNativeSurfaceView.setFocusable(true);
@@ -74,6 +84,11 @@ public class NativeGameActivity extends BaseGameActivity
         
         setContentView( mNativeSurfaceView );
         getGamesClient().setViewForPopups( mNativeSurfaceView );
+    }
+    
+    public Handler getHandler()
+    {
+    	return mHandler;
     }
     
     @Override protected void onPause()

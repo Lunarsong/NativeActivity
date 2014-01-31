@@ -226,6 +226,7 @@ namespace Android
 	/*                                 NativeInterface                                */
 	/**********************************************************************************/
 	NativeActivity::NativeInterface::NativeInterface( NativeActivity* pActivity )
+	: m_AppState( pActivity->GetJNI() )
 	{
 		m_pActivity = pActivity;
 	}
@@ -385,6 +386,11 @@ namespace Android
 	void NativeActivity::NativeInterface::OnSignInFailed()
 	{
 		GooglePlayServices::OnSignInFailed();
+	}
+
+	IAppStateInterface* NativeActivity::NativeInterface::GetAppStateInterface()
+	{
+		return &m_AppState;
 	}
 
 	AssetManager& NativeActivity::GetAssetManager()

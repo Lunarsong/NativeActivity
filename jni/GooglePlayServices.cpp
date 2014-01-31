@@ -9,6 +9,7 @@
 #include "GoogleGames.h"
 #include "GooglePlus.h"
 #include "AndroidLog.h"
+#include "AppState.h"
 #include <cstring>
 
 namespace Android
@@ -57,6 +58,8 @@ namespace Android
 
 		GoogleGames::Init( pEnv, pObj, m_jClass );
 		GooglePlus::Init( pEnv, pObj, m_jClass );
+
+		AppState::Init( pEnv, pObj );
 	}
 
 	void GooglePlayServices::Shutdown()

@@ -4,6 +4,7 @@
 
 #include "AndroidLog.h"
 #include "INativeInterface.h"
+#include "AppState.h"
 
 using namespace Android;
 
@@ -26,9 +27,14 @@ extern "C"
     // Google Play Services
     JNIEXPORT void JNICALL nativeOnSignInSucceeded( JNIEnv* pEnv, jobject pObj, jstring strAccountName );
     JNIEXPORT void JNICALL nativeOnSignInFailed( JNIEnv* pEnv, jobject pObj );
+
+    // AppState [cloud save]
+    JNIEXPORT void JNICALL nativeOnStateConflict( JNIEnv* pEnv, jobject pObj, const jobject pListener, const int iStateKey, const jstring resolvedVersion, const jbyteArray localData, const jbyteArray serverData );
+    JNIEXPORT void JNICALL nativeOnStateLoaded( JNIEnv* pEnv, jobject pObj, const jobject pListener, const int iStatusCode, const int iStateKey, const jbyteArray data );
+
 };
 
-static const JNINativeMethod g_NativeMethods[] =
+static const JNINativeMethod g_NativActivityeMethods[] =
 {
     { "nativeMain", "(Ljava/lang/String;)V", (void*)nativeMain },
 
@@ -47,6 +53,15 @@ static const JNINativeMethod g_NativeMethods[] =
     // Google Play Services
     { "nativeOnSignInSucceeded", "(Ljava/lang/String;)V", (void*)nativeOnSignInSucceeded },
     { "nativeOnSignInFailed", "()V", (void*)nativeOnSignInFailed },
+
+};
+
+static const JNINativeMethod g_NativeAppStateMethods[] =
+{
+    // AppState [cloud save]
+    { "nativeOnStateConflict", "(Ljava/lang/Object;ILjava/lang/String;[B[B)V", (void*)nativeOnStateConflict },
+    { "nativeOnStateLoaded", "(Ljava/lang/Object;II[B)V", (void*)nativeOnStateLoaded },
+
 };
 
 #define NELEM( x ) ( (int) ( sizeof(x) / sizeof( (x) [0] ) ) )
@@ -60,8 +75,11 @@ jint JNI_OnLoad( JavaVM* pJavaVM, void* pReserved )
 
     // Get jclass with pEnv->FindClass.
     // Register methods with pEnv->RegisterNatives.
-    jclass javaLibClass = pEnv->FindClass( "com/lunarsong/android/NativeSurfaceView" );
-    pEnv->RegisterNatives( javaLibClass, g_NativeMethods, NELEM( g_NativeMethods ) );
+    jclass jNativeSurfaceViewClass = pEnv->FindClass( "com/lunarsong/android/NativeSurfaceView" );
+    pEnv->RegisterNatives( jNativeSurfaceViewClass, g_NativActivityeMethods, NELEM( g_NativActivityeMethods ) );
+
+    jclass jCloudSaveHelperClass = pEnv->FindClass( "com/lunarsong/android/CloudSaveHelper" );
+    pEnv->RegisterNatives( jCloudSaveHelperClass, g_NativeAppStateMethods, NELEM( g_NativeAppStateMethods ) );
 
     LOGV( "NativeActivity C++ successfully loaded." );
 
@@ -255,5 +273,24 @@ JNIEXPORT void JNICALL nativeOnSignInFailed( JNIEnv* pEnv, jobject pObj )
 	if ( s_pNativeInterface )
 	{
 		s_pNativeInterface->OnSignInFailed();
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnStateConflict( JNIEnv* pEnv, jobject pObj, const jobject pListener, const int iStateKey, const jstring resolvedVersion, const jbyteArray localData, const jbyteArray serverData )
+{
+	LOGV( "[nativeOnStateLoaded] StateKey: %i.", iStateKey );
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->GetAppStateInterface()->OnStateConflict( pListener, iStateKey, resolvedVersion, localData, serverData );
+	}
+}
+
+JNIEXPORT void JNICALL nativeOnStateLoaded( JNIEnv* pEnv, jobject pObj, const jobject pListener, const int iStatusCode, const int iStateKey, const jbyteArray data )
+{
+	LOGV( "[nativeOnStateLoaded] Code: %i, key: %i", iStatusCode, iStateKey );
+
+	if ( s_pNativeInterface )
+	{
+		s_pNativeInterface->GetAppStateInterface()->OnStateLoaded( pListener, iStatusCode, iStateKey, data );
 	}
 }

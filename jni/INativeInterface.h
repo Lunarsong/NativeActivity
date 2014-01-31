@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IAppStateInterface.h"
+
 namespace Android
 {
 	class INativeInterface
@@ -27,6 +29,8 @@ namespace Android
 		// Play Services
 		virtual void OnSignInSucceeded( char* pAccountName )	= 0;
 		virtual void OnSignInFailed()		= 0;
+
+		virtual IAppStateInterface* GetAppStateInterface() = 0;
 
 		virtual ~INativeInterface() { }
 	};

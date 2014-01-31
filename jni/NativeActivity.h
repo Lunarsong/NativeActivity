@@ -8,6 +8,7 @@
 #include "INativeInterface.h"
 #include "AssetManager.h"
 #include "IAndroidHandler.h"
+#include "AppStateImpl.h"
 
 namespace Android
 {
@@ -107,8 +108,13 @@ namespace Android
 			virtual void OnSignInSucceeded( char* pAccountName );
 			virtual void OnSignInFailed();
 
+			// Interfaces
+			virtual IAppStateInterface* GetAppStateInterface();
+
 		private:
 			NativeActivity* m_pActivity;
+
+			AppStateImpl	m_AppState;
 		};
 
 		friend class NativeInterface;
