@@ -3,6 +3,7 @@
 #include "NativeActivity.h"
 #include "IAndroidHandler.h"
 #include "AssetManager.h"
+#include "NotificationManager.h"
 
 namespace Android
 {
@@ -20,6 +21,14 @@ namespace Android
 
 	AssetManager& GetAssetManager();
 	const char* GetAppDir();
+
+	JNIEnv* GetJNIEnv();
+	jobject GetJNIActivity();
+
+	ClassLoader& GetClassLoader();
+	NotificationManager& GetNotificationManager();
+
+	NativeActivity& GetNativeActivity();
 };
 
 #ifndef _LIB

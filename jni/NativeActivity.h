@@ -9,6 +9,8 @@
 #include "AssetManager.h"
 #include "IAndroidHandler.h"
 #include "AppStateImpl.h"
+#include "ClassLoader.h"
+#include "NotificationManager.h"
 
 namespace Android
 {
@@ -36,11 +38,19 @@ namespace Android
 		const char* GetAppDir() const;
 
 		JNIEnv* GetJNI();
+		jobject	GetContext();
 		jobject	GetObject();
 		jclass 	GetClass();
 
+		ClassLoader& GetClassLoader();
+		NotificationManager& GetNotificationManager();
+
+		jobject GetSystemService( const char* pServiceName );
+
 	private:
 		AssetManager m_AssetManager;
+		ClassLoader	 m_ClassLoader;
+		NotificationManager m_NotificationManager;
 
 		bool PeekEvent( AndroidMessage& message );
 		void DispatchMessage( const AndroidMessage& message );
@@ -70,6 +80,8 @@ namespace Android
 		jmethodID	m_hHideKeyboardMethod; // Hide keyboard
 
 		jmethodID	m_hGetAppDirMethod;
+
+		jmethodID	m_hGetSystemServiceMethod;
 
 		// Context
 		jmethodID	m_hGetContextMethod;

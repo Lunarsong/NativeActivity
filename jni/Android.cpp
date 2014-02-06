@@ -4,6 +4,23 @@
 namespace Android
 {
 	NativeActivity s_NativeActivity = NativeActivity();
+	static JNIEnv* s_pEnv = NULL;
+	static jobject s_pActivity = NULL;
+
+	NativeActivity& GetNativeActivity()
+	{
+		return s_NativeActivity;
+	}
+
+	JNIEnv* GetJNIEnv()
+	{
+		return s_pEnv;
+	}
+
+	jobject GetJNIActivity()
+	{
+		return s_pActivity;
+	}
 
 	void PollEvents()
 	{
@@ -23,7 +40,10 @@ namespace Android
 	void SetJNI( JNIEnv* pEnv, jobject pObj, INativeInterface** pInterface )
 	{
 		LOGV( "[Android]: Setting JNI Environment." );
+		s_pEnv = pEnv;
+
 		s_NativeActivity.SetJNI( pEnv, pObj, pInterface );
+		s_pActivity = s_NativeActivity.GetContext();
 	}
 
 	ANativeWindow* GetWindow()
@@ -54,6 +74,16 @@ namespace Android
 	const char* GetAppDir()
 	{
 		return s_NativeActivity.GetAppDir();
+	}
+
+	ClassLoader& GetClassLoader()
+	{
+		return s_NativeActivity.GetClassLoader();
+	}
+
+	NotificationManager& GetNotificationManager()
+	{
+		return s_NativeActivity.GetNotificationManager();
 	}
 }
 

@@ -56,7 +56,7 @@ namespace Android
 		jbyteArray arrBytes = s_pEnv->NewByteArray( lBytesToRead );
 
 		// Read bytes
-		long lBytesRead = (long)s_pEnv->CallLongMethod( m_pObject, s_hReadMethod, arrBytes, 0, (int)lBytesToRead );
+		long lBytesRead = (long)s_pEnv->CallIntMethod( m_pObject, s_hReadMethod, arrBytes, 0, (int)lBytesToRead );
 
 		// Retrieve bytes from array
 		jbyte* pBytes = s_pEnv->GetByteArrayElements( arrBytes, NULL );

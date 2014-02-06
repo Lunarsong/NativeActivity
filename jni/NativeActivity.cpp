@@ -41,6 +41,9 @@ namespace Android
 		// Message methods
 		m_hMessageIDField = NULL;
 
+		// Methods
+		m_hGetSystemServiceMethod	= NULL;
+
 		// Context
 		m_hGetContextMethod 	= NULL;
 		m_pContext 				= NULL;
@@ -67,6 +70,11 @@ namespace Android
 	jobject	NativeActivity::GetObject()
 	{
 		return m_pObj;
+	}
+
+	jobject	NativeActivity::GetContext()
+	{
+		return m_pContext;
 	}
 
 	jclass NativeActivity::GetClass()
@@ -158,12 +166,27 @@ namespace Android
 		m_hGetContextMethod	= pEnv->GetMethodID( m_pJavaClass, "getContext", "()Landroid/content/Context;" );
 		m_pContext			= pEnv->NewGlobalRef( pEnv->CallObjectMethod( m_pObj, m_hGetContextMethod ) );
 
+		jclass hContextClass = pEnv->GetObjectClass( m_pContext );
+		m_hGetSystemServiceMethod = pEnv->GetMethodID( hContextClass, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;" );
+
 		// Init the Asset Manager
 		m_AssetManager.Init();
+
+		m_ClassLoader.InitJNI( pEnv, hContextClass, m_pContext );
+		m_NotificationManager.Init();
 
 		GooglePlayServices::Init( pEnv, m_pContext );
 
 		*pInterface = new NativeInterface( this );
+	}
+
+	jobject NativeActivity::GetSystemService( const char* pServiceName )
+	{
+		jstring string = m_pEnv->NewStringUTF( pServiceName );
+		jobject result = m_pEnv->CallObjectMethod( m_pContext, m_hGetSystemServiceMethod, string );
+		m_pEnv->DeleteLocalRef( string );
+
+		return result;
 	}
 
 	void NativeActivity::SetSurface( jobject pSurface )
@@ -396,6 +419,16 @@ namespace Android
 	AssetManager& NativeActivity::GetAssetManager()
 	{
 		return m_AssetManager;
+	}
+
+	ClassLoader& NativeActivity::GetClassLoader()
+	{
+		return m_ClassLoader;
+	}
+
+	NotificationManager& NativeActivity::GetNotificationManager()
+	{
+		return m_NotificationManager;
 	}
 
 	void NativeActivity::InitAppDir()
